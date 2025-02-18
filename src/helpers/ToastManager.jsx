@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { View, StyleSheet } from "react-native";
-import Toast from "../components/Toast";
 
 const ToastManager = (() => {
   const toasts = [];
@@ -33,27 +31,31 @@ const ToastContainer = () => {
   }, []);
 
   return (
-    <View style={styles.container}>
+    <div className="fixed bottom-5 right-5 left-5 z-50 flex flex-col gap-3">
       {toasts.map((toast) => (
-        <Toast
+        <div
           key={toast.id}
-          message={toast.message}
-          type={toast.type}
-          onClose={() => ToastManager.dismiss(toast.id)}
-        />
+          className={`flex items-center justify-between gap-4 p-4 rounded-md shadow-lg animate-slide-in bg-${
+            toast.type === "success"
+              ? "green-500"
+              : toast.type === "error"
+              ? "red-500"
+              : toast.type === "warning"
+              ? "yellow-500"
+              : "gray-800"
+          } text-white`}
+        >
+          <span>{toast.message}</span>
+          <button
+            className="text-white hover:text-gray-200"
+            onClick={() => ToastManager.dismiss(toast.id)}
+          >
+            ✕
+          </button>
+        </div>
       ))}
-    </View>
+    </div>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    position: "absolute",
-    bottom: 20,
-    right: 10,
-    left: 10,
-    zIndex: 1000,
-  },
-});
 
 export { ToastManager, ToastContainer };

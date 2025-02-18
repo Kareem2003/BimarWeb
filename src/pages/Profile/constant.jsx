@@ -1,0 +1,27 @@
+export const INITIAL_STATE = {
+  doctorName: "",
+  doctorEmail: "",
+  doctorPhone: "",
+  doctorPassword: "",
+  doctorDateOfBirth: "",
+  nationalID: "",
+  Gender: "",
+  syndicateID: "",
+  syndicateCard: "",
+  yearsOfExprience: "",
+  doctorImage: "",
+  field: "",
+  certificates: "",
+  clinic: [
+    {
+      clinicLicense: "",
+      clinicCity: "",
+      clinicArea: "",
+      clinicAddress: "",
+      clinicPhone: [""],
+      clinicOpeningHours: [""],
+      clinicWorkDays: [""],
+      clinicLocationLinks: "",
+    },
+  ],
+};

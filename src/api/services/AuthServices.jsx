@@ -1,31 +1,51 @@
-import { $axios } from "../axios";
+import { $axios, $axiosFormData } from "../axios";
 // fetch the area dropdowns
-export const fetchOTP = (payload, onSuccess, onError, onFinally) => {
+export const doctorLogin = (payload, onSuccess, onError, onFinally) => {
+  console.log("Payload: ", onSuccess);
   $axios
-    .post(`/generate-otp`, {
-      its_number: payload.its_number,
+    .post(`/doctor/doctorLogin`, {
+      doctorEmail: payload.doctorEmail,
+      doctorPassword: payload.doctorPassword,
     })
     .then((response) => {
       onSuccess(response);
-      //   console.log("API Service: ", response.data.result);
     })
     .catch((error) => {
-      onError(error.response.data);
+      onError(error);
+    })
+    .finally(() => {
+      onFinally();
+    });
+};
+export const doctorForgetPassword = (
+  payload,
+  onSuccess,
+  onError,
+  onFinally
+) => {
+  $axios
+    .post(`/doctor/forget-password`, {
+      doctorEmail: payload.doctorEmail,
+    })
+    .then((response) => {
+      onSuccess(response);
+    })
+    .catch((error) => {
+      onError(error);
     })
     .finally(() => {
       onFinally();
     });
 };
 
-export const verifyOTP = (payload, onSuccess, onError, onFinally) => {
-  $axios
-    .post(`/verify-otp`, payload)
+export const doctorRegister = (payload, onSuccess, onError, onFinally) => {
+  $axiosFormData
+    .post(`/doctor/doctorRegister`, payload)
     .then((response) => {
       onSuccess(response);
-      //   console.log("API Service: ", response.data.result);
     })
     .catch((error) => {
-      onError(error.response.data);
+      onError(error);
     })
     .finally(() => {
       onFinally();

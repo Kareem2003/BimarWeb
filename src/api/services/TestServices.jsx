@@ -8,8 +8,8 @@ export const addDiagnosis = (payload, onSuccess, onError, onFinally) => {
       doctorPhone: payload.doctorPhone,
       diagnosis: payload.diagnosis,
       treatmentPlan: payload.treatmentPlan,
-      Xray: payload.Xray, 
-      labResults: payload.labResults, 
+      Xray: payload.Xray,
+      labResults: payload.labResults,
       prescription: {
         prescriptionDate: payload.prescription.prescriptionDate,
         prescriptionInstruction: [
@@ -34,10 +34,9 @@ export const addDiagnosis = (payload, onSuccess, onError, onFinally) => {
     })
     .then((response) => {
       onSuccess(response);
-      //   console.log("API Service: ", response.data.result);
     })
     .catch((error) => {
-      onError(error.response.data);
+      onError(error);
     })
     .finally(() => {
       onFinally();
