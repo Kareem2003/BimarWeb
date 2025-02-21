@@ -9,6 +9,7 @@ import Layout from "./components/Layout";
 import ChatScreen from "./pages/Chat";
 import ProfileScreen from "./pages/Profile";
 import { DOCTOR_INFO } from "./helpers/constants/StaticKeys";
+import DashboardScreen from "./pages/Dashboard";
 
 const Routers = () => {
   return useRoutes([
@@ -20,9 +21,7 @@ const Routers = () => {
       path: "profile",
       element: (
         <ProtectedRoute>
-          <Layout>
-            <ProfileScreen />
-          </Layout>
+          <Layout></Layout>
         </ProtectedRoute>
       ),
     },
@@ -31,16 +30,14 @@ const Routers = () => {
       element: (
         <ProtectedRoute>
           <Layout>
-            <ChatScreen />
+            <DashboardScreen />
           </Layout>
         </ProtectedRoute>
       ),
       children: [
         {
-          path: "people",
-          children: [
-            // Add your authenticated child routes here
-          ],
+          path: "profile",
+          element: <ProfileScreen />,
         },
       ],
     },

@@ -6,14 +6,30 @@ import ACTION_TYPES from "../../reducers/actionTypes";
 import { doctorLogin, doctorRegister } from "../../api/services/AuthServices";
 import { ToastManager } from "../../helpers/ToastManager";
 import axios from "axios";
-import { Navigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
+
 const Logic = () => {
   const [state, dispatch] = useReducer(reducer, INITIAL_STATE);
+  const navigate = useNavigate();
+
   const updateProp = (prop, value) => {
     dispatch({
       payload: [{ type: ACTION_TYPES.UPDATE_PROP, prop: prop, value: value }],
     });
   };
+
+  // Function to validate phone number format
+  const isValidPhoneNumber = (phone) => {
+    const phoneRegex = /^01[0-2,5]\d{8}$/; // Allows optional '+' and 10 to 15 digits
+    return phoneRegex.test(phone);
+  };
+
+  // Function to validate email format
+  const isValidEmail = (email) => {
+    const emailRegex = /\S+@\S+\.\S+/;
+    return emailRegex.test(email);
+  };
+
   const validateInputs = () => {
     if (
       !state.doctorName ||
@@ -43,38 +59,44 @@ const Logic = () => {
     return true;
   };
 
-  // const handleRegister = () => {
-  //   if (!validateInputs()) return;
-  //   doctorRegister(
-  //     {
-  //       doctorName: state.doctorName,
-  //       doctorEmail: state.doctorEmail,
-  //       doctorPhone: state.doctorPhone,
-  //       doctorPassword: state.doctorPassword,
-  //       doctorDateOfBirth: state.doctorDateOfBirth,
-  //       nationalID: state.nationalID,
-  //       Gender: state.Gender,
-  //       syndicateID: state.syndicateID,
-  //       syndicateCard: state.syndicateCard,
-  //       yearsOfExprience: state.yearsOfExprience,
-  //       doctorImage: state.doctorImage,
-  //       field: state.field,
-  //       certificates: state.certificates,
-  //       clinic: state.clinic,
-  //     },
-  //     (res) => {
-  //       ToastManager.notify("Registration successful!", { type: "success" });
-  //       console.log(res);
-  //     },
-  //     (err) => {
-  //       ToastManager.notify("Registration failed. Please try again.", { type: "error" });
-  //       console.log(err);
-  //     },
-  //     () => {}
-  //   );
-  // };
-
   const handleRegister = () => {
+    // Validate inputs
+    const errorMessages = [];
+
+    // Validate phone number
+    if (!isValidPhoneNumber(state.doctorPhone)) {
+      errorMessages.push("Invalid phone number format.");
+    }
+
+    // Validate email
+    if (!isValidEmail(state.doctorEmail)) {
+      errorMessages.push("Please enter a valid email address.");
+    }
+
+    // Validate clinic phone numbers
+    state.clinic.forEach((clinic) => {
+      if (
+        !Array.isArray(clinic.clinicPhone) ||
+        clinic.clinicPhone.length === 0
+      ) {
+        errorMessages.push("Clinic phone numbers must be an array.");
+      }
+    });
+
+    // Validate price
+    state.clinic.forEach((clinic) => {
+      if (clinic.price <= 0) {
+        errorMessages.push("Price must be a positive number.");
+      }
+    });
+
+    // Check if there are any error messages
+    if (errorMessages.length > 0) {
+      ToastManager.notify(errorMessages.join(" "), { type: "error" });
+      return; // Exit the function if there are errors
+    }
+
+    // Proceed with registration if no errors
     const formData = new FormData();
 
     // Append text fields
@@ -91,60 +113,83 @@ const Logic = () => {
     formData.append("doctorImage", state.doctorImage);
     formData.append("syndicateCard", state.syndicateCard);
     state.certificates.forEach((file, index) => {
-      formData.append(`certificates`, file);
+      formData.append(`certificates`, file); // Use a consistent key for backend
     });
 
     // Append clinic data
-    state.clinic.forEach((clinic, index) => {
-      formData.append(`clinic[${index}][clinicLicense]`, clinic.clinicLicense);
-      formData.append(`clinic[${index}][clinicCity]`, clinic.clinicCity);
-      formData.append(`clinic[${index}][clinicArea]`, clinic.clinicArea);
-      formData.append(`clinic[${index}][clinicAddress]`, clinic.clinicAddress);
-      formData.append(`clinic[${index}][clinicPhone]`, clinic.clinicPhone[0]);
-      formData.append(`clinic[${index}][clinicEmail]`, clinic.clinicEmail);
-      formData.append(`clinic[${index}][clinicWebsite]`, clinic.clinicWebsite);
+    state.clinic.forEach((clinic, clinicIndex) => {
       formData.append(
-        `clinic[${index}][clinicOpeningHours]`,
-        clinic.clinicOpeningHours[0]
+        `clinic[${clinicIndex}][clinicLicense]`,
+        clinic.clinicLicense
+      );
+      formData.append(`clinic[${clinicIndex}][clinicCity]`, clinic.clinicCity);
+      formData.append(
+        `clinic[${clinicIndex}][clinicWebsite]`,
+        clinic.clinicWebsite
       );
       formData.append(
-        `clinic[${index}][clinicWorkDays]`,
-        clinic.clinicWorkDays[0]
+        `clinic[${clinicIndex}][clinicEmail]`,
+        clinic.clinicEmail
       );
       formData.append(
-        `clinic[${index}][clinicLocationLinks]`,
+        `clinic[${clinicIndex}][clinicLocationLinks]`,
         clinic.clinicLocationLinks
       );
+      formData.append(`clinic[${clinicIndex}][clinicArea]`, clinic.clinicArea);
+      formData.append(
+        `clinic[${clinicIndex}][clinicAddress]`,
+        clinic.clinicAddress
+      );
+      formData.append(
+        `clinic[${clinicIndex}][clinicPhone]`,
+        JSON.stringify(clinic.clinicPhone)
+      ); // Store as a flat array
+      formData.append(`clinic[${clinicIndex}][Price]`, clinic.price);
+
+      // Append work days
+      clinic.clinicWorkDays.forEach((workDay, workDayIndex) => {
+        formData.append(
+          `clinic[${clinicIndex}][clinicWorkDays][${workDayIndex}][day]`,
+          workDay.day
+        );
+        formData.append(
+          `clinic[${clinicIndex}][clinicWorkDays][${workDayIndex}][examinationDuration]`,
+          workDay.examinationDuration
+        );
+        workDay.workingHours.forEach((slot, slotIndex) => {
+          formData.append(
+            `clinic[${clinicIndex}][clinicWorkDays][${workDayIndex}][workingHours][${slotIndex}]`,
+            `${slot.start} - ${slot.end}`
+          );
+        });
+      });
     });
 
+    // Debug FormData
+    for (let [key, value] of formData.entries()) {
+      console.log(key, value);
+    }
+
+    // Send to backend
     doctorRegister(
       formData,
       (res) => {
-        console.log(res);
+        console.log("Registration successful:", res);
+        ToastManager.notify("Registration successful!", {
+          type: "success",
+          duration: 5000,
+        });
+        navigate("/login"); // Use useNavigate hook
       },
       (err) => {
-        console.log(err);
+        console.error("Registration failed:", err);
+        ToastManager.notify("Registration failed. Please try again.", {
+          type: "error",
+          duration: 5000,
+        });
       },
       () => {}
     );
-
-    // // Send the form data to the backend
-    // axios
-    //   .post("/doctor/register", formData, {
-    //     headers: {
-    //       "Content-Type": "multipart/form-data",
-    //     },
-    //   })
-    //   .then((res) => {
-    //     ToastManager.notify("Registration successful!", { type: "success" });
-    //     Navigate("/login");
-    //   })
-    //   .catch((err) => {
-    //     console.error("Registration failed:", err);
-    //     ToastManager.notify("Registration failed. Please try again.", {
-    //       type: "error",
-    //     });
-    //   });
   };
   return { state, updateProp, handleRegister };
 };

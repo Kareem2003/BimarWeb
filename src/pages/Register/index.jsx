@@ -6,40 +6,70 @@ import AppInput from "../../components/AppInput";
 import AppButton from "../../components/AppButton";
 import AppSelect from "../../components/AppSelect";
 import DoctorImage from "../../assets/doctorLogin.jpg";
+import TimePicker from "react-time-picker";
+import "react-time-picker/dist/TimePicker.css";
 
 const RegisterScreen = () => {
   const { state, updateProp, handleRegister } = Logic();
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 5;
+  const [isRegistering, setIsRegistering] = useState(false);
+
+  // Add work day to specific clinic
+  const addWorkDay = (clinicIndex) => {
+    const updatedClinics = [...state.clinic];
+    updatedClinics[clinicIndex].clinicWorkDays.push({
+      day: "",
+      workingHours: [{ start: "", end: "" }],
+      examinationDuration: 0,
+    });
+    updateProp("clinic", updatedClinics);
+  };
+
+  // Remove work day from clinic
+  const removeWorkDay = (clinicIndex, workDayIndex) => {
+    const updatedClinics = [...state.clinic];
+    updatedClinics[clinicIndex].clinicWorkDays = updatedClinics[
+      clinicIndex
+    ].clinicWorkDays.filter((_, i) => i !== workDayIndex);
+    updateProp("clinic", updatedClinics);
+  };
+
+  // Update specific work day field
+  const updateWorkDay = (clinicIndex, workDayIndex, field, value) => {
+    const updatedClinics = [...state.clinic];
+    updatedClinics[clinicIndex].clinicWorkDays[workDayIndex][field] = value; // Ensure value is a scalar
+    updateProp("clinic", updatedClinics);
+  };
+
+  // Function to update a specific clinic field
+  const updateClinicField = (index, field, value) => {
+    const updatedClinics = [...state.clinic];
+    if (field === "clinicPhone") {
+      updatedClinics[index][field] = [value]; // Ensure this is an array
+    } else {
+      updatedClinics[index][field] = value;
+    }
+    updateProp("clinic", updatedClinics);
+  };
 
   // Function to validate the current step before proceeding
   const validateStep = (step) => {
     switch (step) {
       case 1:
         return (
-          state.doctorName &&
-          state.doctorPhone &&
-          state.doctorEmail &&
-          state.doctorPassword
+          // state.doctorName &&
+          // state.doctorPhone &&
+          state.doctorEmail && state.doctorPassword
         );
       case 2:
-        return state.nationalID && state.Gender && state.doctorDateOfBirth;
+        return;
       case 3:
-        return state.field && state.yearsOfExprience && state.syndicateID;
+        return;
       case 4:
-        return state.clinic.every(
-          (clinic) =>
-            clinic.clinicCity &&
-            clinic.clinicArea &&
-            clinic.clinicAddress &&
-            clinic.clinicPhone[0] &&
-            clinic.clinicOpeningHours[0] &&
-            clinic.clinicWorkDays[0] &&
-            clinic.clinicLocationLinks
-        );
+        return;
       case 5:
-        state.clinic.every((clinic) => clinic.clinicLicense);
-        return state.doctorImage && state.certificates && state.syndicateCard;
+        return;
 
       default:
         return false;
@@ -49,11 +79,12 @@ const RegisterScreen = () => {
   // Function to handle the "Next" button click
   const handleNextStep = () => {
     console.log(JSON.stringify(state));
-    if (validateStep(currentStep)) {
-      setCurrentStep(currentStep + 1);
-    } else {
-      alert("Please fill out all fields before proceeding.");
-    }
+    setCurrentStep(currentStep + 1);
+    // if (validateStep(currentStep)) {
+    //
+    // } else {
+    //   alert("Please fill out all fields before proceeding.");
+    // }
   };
 
   // Function to handle the "Previous" button click
@@ -68,12 +99,16 @@ const RegisterScreen = () => {
       clinicCity: "",
       clinicArea: "",
       clinicAddress: "",
-      clinicPhone: [""],
-      clinicEmail: "",
-      clinicWebsite: "",
-      clinicOpeningHours: [""],
-      clinicWorkDays: [""],
+      clinicPhone: [],
+      clinicWorkDays: [
+        {
+          day: [],
+          workingHours: [{ start: "", end: "" }],
+          examinationDuration: 0,
+        },
+      ],
       clinicLocationLinks: "",
+      price: 0,
     };
     updateProp("clinic", [...state.clinic, newClinic]);
   };
@@ -84,18 +119,18 @@ const RegisterScreen = () => {
     updateProp("clinic", updatedClinics);
   };
 
-  // Function to update a specific clinic field
-  const updateClinic = (index, field, value) => {
-    const updatedClinics = [...state.clinic];
-    updatedClinics[index][field] = value;
-    updateProp("clinic", updatedClinics);
-  };
-
   // Animation variants for Framer Motion
   const stepVariants = {
     hidden: { opacity: 0, x: -50 },
     visible: { opacity: 1, x: 0 },
     exit: { opacity: 0, x: 50 },
+  };
+
+  // Function to handle the "Register" button click
+  const handleRegisterClick = async () => {
+    setIsRegistering(true);
+    await handleRegister();
+    setIsRegistering(false);
   };
 
   return (
@@ -166,7 +201,7 @@ const RegisterScreen = () => {
           onSubmit={(e) => {
             e.preventDefault();
             if (currentStep === 5) {
-              handleRegister();
+              handleRegisterClick(); // This is the only trigger
             }
           }}
           className="flex flex-col p-8 space-y-8"
@@ -355,111 +390,337 @@ const RegisterScreen = () => {
                   Clinic Information
                 </h3>
                 <div className="space-y-4">
-                  {/* Render clinics dynamically */}
-                  {state.clinic.map((clinic, index) => (
+                  {state.clinic.map((clinic, clinicIndex) => (
                     <div
-                      key={index}
+                      key={clinicIndex}
                       className="space-y-4 border p-4 rounded-lg"
                     >
-                      <h4 className="text-lg font-semibold">
-                        Clinic {index + 1}
-                      </h4>
-                      <label className="block text-gray-700">
-                        Clinic City <span className="text-red-500">*</span>
-                      </label>
-                      <AppInput
-                        term={clinic.clinicCity}
-                        onChangeText={(e) =>
-                          updateClinic(index, "clinicCity", e.target.value)
-                        }
-                        placeholder="Enter clinic city"
-                      />
-                      <label className="block text-gray-700">
-                        Clinic Area <span className="text-red-500">*</span>
-                      </label>
-                      <AppInput
-                        term={clinic.clinicArea}
-                        onChangeText={(e) =>
-                          updateClinic(index, "clinicArea", e.target.value)
-                        }
-                        placeholder="Enter clinic area"
-                      />
-                      <label className="block text-gray-700">
-                        Clinic Address
-                      </label>
-                      <AppInput
-                        term={clinic.clinicAddress}
-                        onChangeText={(e) =>
-                          updateClinic(index, "clinicAddress", e.target.value)
-                        }
-                        placeholder="Enter clinic address"
-                      />
-                      <label className="block text-gray-700">
-                        Clinic Phone
-                      </label>
-                      <AppInput
-                        term={clinic.clinicPhone[0]}
-                        onChangeText={(e) =>
-                          updateClinic(index, "clinicPhone", [e.target.value])
-                        }
-                        placeholder="Enter clinic phone"
-                      />
-                      <label className="block text-gray-700">
-                        Clinic Opening Hours
-                      </label>
-                      <AppInput
-                        term={clinic.clinicOpeningHours[0]}
-                        onChangeText={(e) =>
-                          updateClinic(index, "clinicOpeningHours", [
-                            e.target.value,
-                          ])
-                        }
-                        placeholder="Enter opening hours"
-                      />
-                      <label className="block text-gray-700">
-                        Clinic Work Days
-                      </label>
-                      <AppInput
-                        term={clinic.clinicWorkDays[0]}
-                        onChangeText={(e) =>
-                          updateClinic(index, "clinicWorkDays", [
-                            e.target.value,
-                          ])
-                        }
-                        placeholder="Enter work days"
-                      />
-                      <label className="block text-gray-700">
-                        Clinic Location Links
-                      </label>
-                      <AppInput
-                        term={clinic.clinicLocationLinks}
-                        onChangeText={(e) =>
-                          updateClinic(
-                            index,
-                            "clinicLocationLinks",
-                            e.target.value
-                          )
-                        }
-                        placeholder="Enter location links"
-                      />
-                      {/* Button to remove clinic */}
-                      {state.clinic.length > 1 && (
+                      <div className="flex justify-between items-center">
+                        <h4 className="text-lg font-semibold">
+                          Clinic {clinicIndex + 1}
+                        </h4>
+                        {state.clinic.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => removeClinic(clinicIndex)}
+                            className="bg-primary text-secondary px-4 py-2 rounded-lg"
+                          >
+                            Remove Clinic
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Clinic Basic Information */}
+                      <div className="space-y-4">
+                        <label className="block text-gray-700">
+                          Clinic City <span className="text-red-500">*</span>
+                        </label>
+                        <AppInput
+                          term={clinic.clinicCity}
+                          onChangeText={(e) =>
+                            updateClinicField(
+                              clinicIndex,
+                              "clinicCity",
+                              e.target.value
+                            )
+                          }
+                          placeholder="Enter clinic city"
+                        />
+
+                        <label className="block text-gray-700">
+                          Clinic Area <span className="text-red-500">*</span>
+                        </label>
+                        <AppInput
+                          term={clinic.clinicArea}
+                          onChangeText={(e) =>
+                            updateClinicField(
+                              clinicIndex,
+                              "clinicArea",
+                              e.target.value
+                            )
+                          }
+                          placeholder="Enter clinic area"
+                        />
+
+                        <label className="block text-gray-700">
+                          Clinic Address <span className="text-red-500">*</span>
+                        </label>
+                        <AppInput
+                          term={clinic.clinicAddress}
+                          onChangeText={(e) =>
+                            updateClinicField(
+                              clinicIndex,
+                              "clinicAddress",
+                              e.target.value
+                            )
+                          }
+                          placeholder="Enter clinic address"
+                        />
+
+                        <label className="block text-gray-700">
+                          Clinic Phone <span className="text-red-500">*</span>
+                        </label>
+                        <AppInput
+                          term={clinic.clinicPhone[0] || ""}
+                          onChangeText={(e) =>
+                            updateClinicField(
+                              clinicIndex,
+                              "clinicPhone",
+                              e.target.value
+                            )
+                          }
+                          placeholder="Enter clinic phone"
+                        />
+                        <label className="block text-gray-700">
+                          Clinic Email <span className="text-red-500">*</span>
+                        </label>
+                        <AppInput
+                          term={clinic.clinicEmail}
+                          onChangeText={(e) =>
+                            updateClinicField(
+                              clinicIndex,
+                              "clinicEmail",
+                              e.target.value
+                            )
+                          }
+                          placeholder="Enter clinic email"
+                        />
+
+                        <label className="block text-gray-700">
+                          Consultation Price{" "}
+                          <span className="text-red-500">*</span>
+                        </label>
+                        <AppInput
+                          term={clinic.price}
+                          onChangeText={(e) =>
+                            updateClinicField(
+                              clinicIndex,
+                              "price",
+                              e.target.value
+                            )
+                          }
+                          placeholder="Enter consultation price"
+                          type="number"
+                        />
+
+                        <label className="block text-gray-700">
+                          Clinic Website <span className="text-red-500">*</span>
+                        </label>
+                        <AppInput
+                          term={clinic.clinicWebsite}
+                          onChangeText={(e) =>
+                            updateClinicField(
+                              clinicIndex,
+                              "clinicWebsite",
+                              e.target.value
+                            )
+                          }
+                          placeholder="Enter clinic website URL"
+                        />
+
+                        <label className="block text-gray-700">
+                          Clinic Location Links{" "}
+                          <span className="text-red-500">*</span>
+                        </label>
+                        <AppInput
+                          term={clinic.clinicLocationLinks}
+                          onChangeText={(e) =>
+                            updateClinicField(
+                              clinicIndex,
+                              "clinicLocationLinks",
+                              e.target.value
+                            )
+                          }
+                          placeholder="Enter clinic location link"
+                        />
+                      </div>
+
+                      {/* Work Days Section */}
+                      <div className="space-y-4">
+                        <h5 className="font-medium">Working Days</h5>
+                        {clinic.clinicWorkDays.map((workDay, workDayIndex) => (
+                          <div
+                            key={workDayIndex}
+                            className="space-y-4 border p-4 rounded-lg"
+                          >
+                            <div className="flex justify-between items-center">
+                              <h6 className="font-medium">
+                                Day {workDayIndex + 1}
+                              </h6>
+                              {clinic.clinicWorkDays.length > 1 && (
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    removeWorkDay(clinicIndex, workDayIndex)
+                                  }
+                                  className="text-red-500 text-sm"
+                                >
+                                  Remove Day
+                                </button>
+                              )}
+                            </div>
+
+                            <label className="block text-gray-700">Day</label>
+                            <AppSelect
+                              selectedValue={workDay.day} // Ensure this is a scalar value (e.g., "Monday")
+                              onChange={(e) =>
+                                updateWorkDay(
+                                  clinicIndex,
+                                  workDayIndex,
+                                  "day",
+                                  e.target.value // This should be a scalar value
+                                )
+                              }
+                              options={[
+                                { value: "Sunday", label: "Sunday" },
+                                { value: "Monday", label: "Monday" },
+                                { value: "Tuesday", label: "Tuesday" },
+                                { value: "Wednesday", label: "Wednesday" },
+                                { value: "Thursday", label: "Thursday" },
+                                { value: "Friday", label: "Friday" },
+                                { value: "Saturday", label: "Saturday" },
+                              ]}
+                              placeholder="Select day"
+                            />
+
+                            <label className="block text-gray-700">
+                              Working Hours
+                            </label>
+                            <div className="space-y-2">
+                              {workDay.workingHours.map((slot, slotIndex) => (
+                                <div
+                                  key={slotIndex}
+                                  className="flex gap-4 items-center"
+                                >
+                                  <TimePicker
+                                    value={slot.start || ""}
+                                    onChange={(time) => {
+                                      const updatedHours = [
+                                        ...workDay.workingHours,
+                                      ];
+                                      updatedHours[slotIndex] = {
+                                        ...updatedHours[slotIndex],
+                                        start: time,
+                                      };
+                                      updateWorkDay(
+                                        clinicIndex,
+                                        workDayIndex,
+                                        "workingHours",
+                                        updatedHours
+                                      );
+                                    }}
+                                    placeholder="Start Time"
+                                  />
+                                  <span>to</span>
+                                  <TimePicker
+                                    value={slot.end || ""}
+                                    onChange={(time) => {
+                                      const updatedHours = [
+                                        ...workDay.workingHours,
+                                      ];
+                                      updatedHours[slotIndex] = {
+                                        ...updatedHours[slotIndex],
+                                        end: time,
+                                      };
+                                      updateWorkDay(
+                                        clinicIndex,
+                                        workDayIndex,
+                                        "workingHours",
+                                        updatedHours
+                                      );
+                                    }}
+                                    placeholder="End Time"
+                                  />
+                                  {workDay.workingHours.length > 1 && (
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const updatedHours =
+                                          workDay.workingHours.filter(
+                                            (_, i) => i !== slotIndex
+                                          );
+                                        updateWorkDay(
+                                          clinicIndex,
+                                          workDayIndex,
+                                          "workingHours",
+                                          updatedHours
+                                        );
+                                      }}
+                                      className="text-red-500 text-sm"
+                                    >
+                                      Remove
+                                    </button>
+                                  )}
+                                </div>
+                              ))}
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const updatedHours = [
+                                    ...workDay.workingHours,
+                                    { start: "", end: "" },
+                                  ];
+                                  updateWorkDay(
+                                    clinicIndex,
+                                    workDayIndex,
+                                    "workingHours",
+                                    updatedHours
+                                  );
+                                }}
+                                className="bg-blue-100 text-blue-600 px-3 py-1 rounded text-sm"
+                              >
+                                Add Time Slot
+                              </button>
+                            </div>
+
+                            <label className="block text-gray-700">
+                              Examination Duration (minutes)
+                            </label>
+                            <AppInput
+                              term={workDay.examinationDuration}
+                              onChangeText={(e) =>
+                                updateWorkDay(
+                                  clinicIndex,
+                                  workDayIndex,
+                                  "examinationDuration",
+                                  e.target.value
+                                )
+                              }
+                              type="number"
+                              placeholder="30"
+                            />
+                            {/* <AppInput
+                              type="number"
+                              value={workDay.examinationDuration}
+                              onChange={(e) => {
+                                updateWorkDay(
+                                  clinicIndex,
+                                  workDayIndex,
+                                  "examinationDuration",
+                                  e.target.value
+                                );
+                              }}
+                              placeholder="30"
+                            /> */}
+                          </div>
+                        ))}
+
                         <button
                           type="button"
-                          onClick={() => removeClinic(index)}
-                          className="bg-red-500 text-white bg-primary px-4 py-2 rounded-lg"
+                          onClick={() => addWorkDay(clinicIndex)}
+                          className="bg-primary text-secondary px-3 py-1 rounded text-sm"
                         >
-                          Remove Clinic
+                          Add Work Day
                         </button>
-                      )}
+                      </div>
                     </div>
                   ))}
 
-                  {/* Button to add a new clinic */}
+                  {/* Add Clinic Button */}
                   <button
                     type="button"
                     onClick={addClinic}
-                    className="bg-green-500 text-white bg-primary px-4 py-2 rounded-lg"
+                    className="bg-primary text-secondary px-4 py-2 rounded-lg"
                   >
                     Add Clinic
                   </button>
@@ -494,7 +755,7 @@ const RegisterScreen = () => {
                         type="file"
                         onChangeText={(e) => {
                           console.log(e.target);
-                          updateClinic(
+                          updateClinicField(
                             index,
                             "clinicLicense",
                             e.target.files[index]
@@ -550,17 +811,21 @@ const RegisterScreen = () => {
                 className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300"
               />
             )}
-            {currentStep < 5 ? (
+            {currentStep < 5 && (
               <AppButton
                 title="Next"
                 onPress={handleNextStep}
                 className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300"
               />
-            ) : (
+            )}
+            {currentStep === 5 && (
               <AppButton
                 title="Register"
-                onPress={handleRegister}
-                className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300"
+                type="submit" // Explicitly set type to "submit"
+                className={`bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300 ${
+                  isRegistering ? "opacity-50 cursor-not-allowed" : ""
+                }`}
+                disabled={isRegistering}
               />
             )}
           </div>

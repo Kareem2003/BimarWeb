@@ -20,9 +20,11 @@ const AppSelect = ({
       >
         <select
           name={name}
-          value={selectedValue}
+          value={selectedValue || ""} // Ensure value is always defined
           onChange={onChange}
-          className={`flex-1 items-center justify-center text-lg p-1 pl-4 bg-secondary rounded-lg ${selectStyle} text-primary focus:outline-none`}
+          className={`flex-1 items-center justify-center text-lg p-1 pl-4 bg-secondary rounded-lg ${selectStyle} text-primary focus:outline-none ${
+            !editable ? "cursor-not-allowed opacity-50" : ""
+          }`}
           disabled={!editable}
         >
           <option value="" disabled>

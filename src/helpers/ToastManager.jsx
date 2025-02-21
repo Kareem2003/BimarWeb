@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import Toast from "../components/Toast";
 
 const ToastManager = (() => {
   const toasts = [];
@@ -31,28 +32,15 @@ const ToastContainer = () => {
   }, []);
 
   return (
-    <div className="fixed bottom-5 right-5 left-5 z-50 flex flex-col gap-3">
+    <div className="fixed bottom-5 right-5 z-50 flex flex-col gap-3">
       {toasts.map((toast) => (
-        <div
+        <Toast
           key={toast.id}
-          className={`flex items-center justify-between gap-4 p-4 rounded-md shadow-lg animate-slide-in bg-${
-            toast.type === "success"
-              ? "green-500"
-              : toast.type === "error"
-              ? "red-500"
-              : toast.type === "warning"
-              ? "yellow-500"
-              : "gray-800"
-          } text-white`}
-        >
-          <span>{toast.message}</span>
-          <button
-            className="text-white hover:text-gray-200"
-            onClick={() => ToastManager.dismiss(toast.id)}
-          >
-            ✕
-          </button>
-        </div>
+          message={toast.message}
+          type={toast.type}
+          duration={toast.duration}
+          onClose={() => ToastManager.dismiss(toast.id)}
+        />
       ))}
     </div>
   );

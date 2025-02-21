@@ -10,6 +10,7 @@ export default {
       textColor: "#2E354C",
       white: "#fff",
       black: "#000",
+      red: "#f00",
     },
     extend: {
       animation: {

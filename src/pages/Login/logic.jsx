@@ -42,6 +42,7 @@ const Logic = () => {
         doctorPassword: state.doctorPassword,
       },
       (res) => {
+        console.log("document.cookie: ", res);
         const token = document.cookie
           .split("; ")
           .find((row) => row.startsWith("jwt="));
@@ -49,7 +50,7 @@ const Logic = () => {
           const authToken = token.split("=")[1]; // Get the token value
           localStorage.setItem(AUTHENTICATION_TOKEN, authToken);
           localStorage.setItem(DOCTOR_INFO, JSON.stringify(res.doctor));
-          navigate("/profile"); // Use the navigate function
+          navigate("/"); // Use the navigate function
           ToastManager.notify(res.data, { type: res.status });
         } else {
           console.error("No authentication token received.");

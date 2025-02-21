@@ -19,9 +19,17 @@ export const INITIAL_STATE = {
       clinicArea: "",
       clinicAddress: "",
       clinicPhone: [],
-      clinicOpeningHours: [],
-      clinicWorkDays: [],
+      clinicEmail: "",
+      clinicWorkDays: [
+        {
+          day: "",
+          workingHours: [{ start: "", end: "" }],
+          examinationDuration: 0,
+        },
+      ],
       clinicLocationLinks: "",
+      price: 0,
+      clinicWebsite: "",
     },
   ],
 };
