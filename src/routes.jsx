@@ -1,6 +1,5 @@
 import { useRoutes } from "react-router-dom";
 import ProtectedRoute from "./helpers/ProtectedRoute";
-import TestScreen from "./pages/Test";
 import LoginScreen from "./pages/Login";
 import RegisterScreen from "./pages/Register";
 import ForgetPasswordScreen from "./pages/ForgetPassword";
@@ -10,6 +9,7 @@ import ChatScreen from "./pages/Chat";
 import ProfileScreen from "./pages/Profile";
 import { DOCTOR_INFO } from "./helpers/constants/StaticKeys";
 import DashboardScreen from "./pages/Dashboard";
+import AccessPasswordScreen from "./pages/AccessPassword";
 
 const Routers = () => {
   return useRoutes([
@@ -40,6 +40,10 @@ const Routers = () => {
         {
           path: "profile",
           element: <ProfileScreen />,
+        },
+        {
+          path: "access-password",
+          element: <AccessPasswordScreen />,
         },
       ],
     },
