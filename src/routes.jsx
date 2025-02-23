@@ -18,10 +18,12 @@ const Routers = () => {
     { path: "forget-password", element: <ForgetPasswordScreen /> },
     { path: "otp", element: <OTPScreen /> },
     {
-      path: "profile",
+      path: "chat",
       element: (
         <ProtectedRoute>
-          <Layout></Layout>
+          <Layout>
+            <ChatScreen />
+          </Layout>
         </ProtectedRoute>
       ),
     },
