@@ -1,7 +1,6 @@
 import { $axios, $axiosFormData } from "../axios";
 // fetch the area dropdowns
 export const doctorLogin = (payload, onSuccess, onError, onFinally) => {
-  console.log("Payload: ", onSuccess);
   $axios
     .post(`/doctor/doctorLogin`, {
       doctorEmail: payload.doctorEmail,
@@ -17,6 +16,7 @@ export const doctorLogin = (payload, onSuccess, onError, onFinally) => {
       onFinally();
     });
 };
+
 export const doctorForgetPassword = (
   payload,
   onSuccess,

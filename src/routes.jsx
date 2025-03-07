@@ -9,8 +9,8 @@ import ChatScreen from "./pages/Chat";
 import ProfileScreen from "./pages/Profile";
 import { DOCTOR_INFO } from "./helpers/constants/StaticKeys";
 import DashboardScreen from "./pages/Dashboard";
-import AccessPasswordScreen from "./pages/AccessPassword";
-
+import AccessScreen from "./pages/Access";
+    //     <Route path="/access/:token" element={<AccessPage />} /> </Routes>
 const Routers = () => {
   return useRoutes([
     { path: "login", element: <LoginScreen /> },
@@ -18,11 +18,11 @@ const Routers = () => {
     { path: "forget-password", element: <ForgetPasswordScreen /> },
     { path: "otp", element: <OTPScreen /> },
     {
-      path: "chat",
+      path: "/access/:token",
       element: (
         <ProtectedRoute>
           <Layout>
-            <ChatScreen />
+            <AccessScreen />
           </Layout>
         </ProtectedRoute>
       ),
@@ -40,10 +40,6 @@ const Routers = () => {
         {
           path: "profile",
           element: <ProfileScreen />,
-        },
-        {
-          path: "access-password",
-          element: <AccessPasswordScreen />,
         },
       ],
     },
