@@ -10,7 +10,7 @@ import {
 import { DOCTOR_INFO } from "../helpers/constants/StaticKeys";
 import ACTION_TYPES from "../reducers/actionTypes";
 
-const Layout = ({ children }) => {
+const Layout = ({ children, hideNavigation = false }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [userName, setUserName] = useState("Guest");
 
@@ -31,7 +31,7 @@ const Layout = ({ children }) => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
+    <div className="flex flex-col min-h-screen bg-white">
       {/* Top Navbar */}
       <header className="bg-primary text-white shadow-md">
         <div className="container mx-auto px-6 py-4 flex justify-between items-center">
@@ -41,22 +41,24 @@ const Layout = ({ children }) => {
           </h1>
 
           {/* Navigation Links */}
-          <nav className="hidden md:flex space-x-6">
-            <Link
-              to="/"
-              className="hover:text-tertiary transition duration-300"
-            >
-              <FontAwesomeIcon icon={faHome} className="mr-2" />
-              Home
-            </Link>
-            <Link
-              to="/settings"
-              className="hover:text-tertiary transition duration-300"
-            >
-              <FontAwesomeIcon icon={faCog} className="mr-2" />
-              Settings
-            </Link>
-          </nav>
+          {!hideNavigation && (
+            <nav className="hidden md:flex space-x-6">
+              <Link
+                to="/"
+                className="hover:text-tertiary transition duration-300"
+              >
+                <FontAwesomeIcon icon={faHome} className="mr-2" />
+                Home
+              </Link>
+              <Link
+                to="/settings"
+                className="hover:text-tertiary transition duration-300"
+              >
+                <FontAwesomeIcon icon={faCog} className="mr-2" />
+                Settings
+              </Link>
+            </nav>
+          )}
 
           {/* User Dropdown */}
           <div className="relative">
@@ -104,7 +106,7 @@ const Layout = ({ children }) => {
       </header>
 
       {/* Main Content */}
-      <main className="flex-grow container mx-auto bg-background">{children}</main>
+      <main className="flex-grow">{children}</main>
     </div>
   );
 };

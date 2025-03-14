@@ -1,26 +1,29 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams , useNavigate } from "react-router-dom";
 import Logic from "./logic";
 import AppInput from "../../components/AppInput";
 import AppButton from "../../components/AppButton";
 import { verifyLink } from "../../api/services/AccessServices";
+import Cookies from "js-cookie";
 
 const AccessScreen = () => {
   const { token } = useParams();
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
     verifyLink(
       {
-        token,
-        doctorEmail: "kareemabdallah061@gmail.com",
+        doctorEmail: "saramagdyy77@gmail.com",
         password,
       },
       (res) => {
         console.log("Res: ", res);
+       if (res.valid) {
+        navigate("/medicalRecords", { state: { data: res.information } }); // Navigate with data
+        }
       },
       (err) => {
         console.log("error: ", err);

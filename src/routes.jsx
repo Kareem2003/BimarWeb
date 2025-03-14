@@ -10,6 +10,7 @@ import ProfileScreen from "./pages/Profile";
 import { DOCTOR_INFO } from "./helpers/constants/StaticKeys";
 import DashboardScreen from "./pages/Dashboard";
 import AccessScreen from "./pages/Access";
+import MedicalRecordsScreen from "./pages/MedicalRecords";
     //     <Route path="/access/:token" element={<AccessPage />} /> </Routes>
 const Routers = () => {
   return useRoutes([
@@ -17,6 +18,8 @@ const Routers = () => {
     { path: "register", element: <RegisterScreen /> },
     { path: "forget-password", element: <ForgetPasswordScreen /> },
     { path: "otp", element: <OTPScreen /> },
+    { path: "medicalRecords", element: <MedicalRecordsScreen /> },
+    { path: "access", element: <AccessScreen /> },
     {
       path: "/access/:token",
       element: (
@@ -42,7 +45,7 @@ const Routers = () => {
           element: <ProfileScreen />,
         },
       ],
-    },
+    }
   ]);
 };
 
