@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useTable } from "react-table";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import {
@@ -19,78 +19,138 @@ import {
   Tooltip,
 } from "recharts";
 import AppInput from "../../components/AppInput";
+import { DASHBOARD_SECTIONS } from "../../helpers/constants/StaticKeys";
+
+const getIconComponent = (id) => {
+  switch (id) {
+    case "income":
+      return <FaMoneyBillWave className="text-purple-500 text-2xl" />;
+    case "subscription":
+      return <FaCalendarAlt className="text-blue-500 text-2xl" />;
+    case "patients":
+      return <FaUserInjured className="text-green-500 text-2xl" />;
+    default:
+      return null;
+  }
+};
 
 const DashboardScreen = () => {
-  const [mainSections, setMainSections] = useState([
-    {
-      id: "stats",
-      subsections: [
-        {
-          id: "income",
-          title: "Today's Income",
-          value: "$300",
-          icon: <FaMoneyBillWave className="text-purple-500 text-2xl" />,
-        },
-        {
-          id: "subscription",
-          title: "Subscription Time Left",
-          value: "20 Days",
-          icon: <FaCalendarAlt className="text-blue-500 text-2xl" />,
-        },
-        {
-          id: "patients",
-          title: "Total Patients Last Month",
-          value: "10",
-          icon: <FaUserInjured className="text-green-500 text-2xl" />,
-        },
-      ],
-    },
-    {
-      id: "charts",
-      subsections: [
-        {
-          id: "monthly-income",
-          type: "chart",
-          title: "Monthly Income",
-          data: [
-            { month: "Jan", income: 4000 },
-            { month: "Feb", income: 3000 },
-            { month: "Mar", income: 5000 },
-          ],
-        },
-        {
-          id: "notifications",
-          type: "list",
-          title: "Notifications",
-          items: [
-            "You have 3 pending appointments.",
-            "You have 3 pending appointments.",
-            "Your subscription ends in 5 days.",
-          ],
-        },
-      ],
-    },
-    {
-      id: "patients-table",
-      content: {
-        type: "table",
-        title: "Recent Patients",
-        data: [
-          { id: 1, name: "John Doe", date: "2023-10-01", status: "Completed" },
-          { id: 2, name: "Jane Smith", date: "2023-10-02", status: "Pending" },
+  const [mainSections, setMainSections] = useState(() => {
+    // Try to get saved order from localStorage
+    const savedSections = localStorage.getItem(DASHBOARD_SECTIONS);
+    if (savedSections) {
+      const parsed = JSON.parse(savedSections);
+      // Reconstruct the icons after loading from localStorage
+      return parsed.map((section) => {
+        if (section.id === "stats") {
+          section.subsections = section.subsections.map((subsection) => ({
+            ...subsection,
+            icon: getIconComponent(subsection.id),
+          }));
+        }
+        return section;
+      });
+    }
+
+    // Return default sections if nothing is saved
+    return [
+      {
+        id: "stats",
+        subsections: [
           {
-            id: 3,
-            name: "Alice Johnson",
-            date: "2023-10-03",
-            status: "Completed",
+            id: "income",
+            title: "Today's Income",
+            value: "$300",
+            icon: <FaMoneyBillWave className="text-purple-500 text-2xl" />,
+          },
+          {
+            id: "subscription",
+            title: "Subscription Time Left",
+            value: "20 Days",
+            icon: <FaCalendarAlt className="text-blue-500 text-2xl" />,
+          },
+          {
+            id: "patients",
+            title: "Total Patients Last Month",
+            value: "10",
+            icon: <FaUserInjured className="text-green-500 text-2xl" />,
           },
         ],
       },
-    },
-  ]);
+      {
+        id: "charts",
+        subsections: [
+          {
+            id: "monthly-income",
+            type: "chart",
+            title: "Monthly Income",
+            data: [
+              { month: "Jan", income: 4000 },
+              { month: "Feb", income: 3000 },
+              { month: "Mar", income: 5000 },
+            ],
+          },
+          {
+            id: "notifications",
+            type: "list",
+            title: "Notifications",
+            items: [
+              "You have 3 pending appointments.",
+              "You have 3 pending appointments.",
+              "Your subscription ends in 5 days.",
+            ],
+          },
+        ],
+      },
+      {
+        id: "patients-table",
+        content: {
+          type: "table",
+          title: "Recent Patients",
+          data: [
+            {
+              id: 1,
+              name: "John Doe",
+              date: "2023-10-01",
+              status: "Completed",
+            },
+            {
+              id: 2,
+              name: "Jane Smith",
+              date: "2023-10-02",
+              status: "Pending",
+            },
+            {
+              id: 3,
+              name: "Alice Johnson",
+              date: "2023-10-03",
+              status: "Completed",
+            },
+          ],
+        },
+      },
+    ];
+  });
 
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+
+  useEffect(() => {
+    const sectionsToSave = mainSections.map((section) => {
+      if (section.id === "stats") {
+        return {
+          ...section,
+          subsections: section.subsections.map((subsection) => ({
+            ...subsection,
+            icon: undefined, // Remove icon before saving
+          })),
+        };
+      }
+      return section;
+    });
+
+    localStorage.setItem(DASHBOARD_SECTIONS, JSON.stringify(sectionsToSave));
+  }, [mainSections]);
 
   const columns = useMemo(
     () => [
@@ -157,34 +217,39 @@ const DashboardScreen = () => {
     const { source, destination, type } = result;
     if (!destination) return;
 
+    let updatedSections = [...mainSections];
+
     if (type === "MAIN_SECTIONS") {
-      const items = [...mainSections];
-      const [reorderedItem] = items.splice(source.index, 1);
-      items.splice(destination.index, 0, reorderedItem);
-      setMainSections(items);
+      const [reorderedItem] = updatedSections.splice(source.index, 1);
+      updatedSections.splice(destination.index, 0, reorderedItem);
     }
 
     if (type === "SUB_SECTIONS") {
-      const sectionIndex = mainSections.findIndex(
+      const sectionIndex = updatedSections.findIndex(
         (section) => section.id === source.droppableId
       );
-      const items = [...mainSections[sectionIndex].subsections];
+      const items = [...updatedSections[sectionIndex].subsections];
       const [reorderedItem] = items.splice(source.index, 1);
       items.splice(destination.index, 0, reorderedItem);
-      const updatedSections = [...mainSections];
       updatedSections[sectionIndex].subsections = items;
-      setMainSections(updatedSections);
     }
+
+    setMainSections(updatedSections);
   };
 
   const handleRemoveNotification = (index) => {
     const updatedSections = [...mainSections];
-    const notificationsSection = updatedSections.find(
+    const chartsSection = updatedSections.find((s) => s.id === "charts");
+    const notificationsSubsection = chartsSection.subsections.find(
       (s) => s.id === "notifications"
     );
-    if (notificationsSection) {
-      notificationsSection.items.splice(index, 1);
+
+    if (notificationsSubsection) {
+      notificationsSubsection.items = notificationsSubsection.items.filter(
+        (_, i) => i !== index
+      );
       setMainSections(updatedSections);
+      localStorage.setItem(DASHBOARD_SECTIONS, JSON.stringify(updatedSections));
     }
   };
 
