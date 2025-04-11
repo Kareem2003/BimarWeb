@@ -2,6 +2,7 @@ import { reducer } from "../../reducers/reducer";
 import { useReducer, useEffect } from "react";
 import { INITIAL_STATE } from "./constant";
 import ACTION_TYPES from "../../reducers/actionTypes";
+import { fetchAppointments } from "../../api/services/DashboardServices";
 
 const Logic = () => {
   const [state, dispatch] = useReducer(reducer, INITIAL_STATE);
@@ -16,6 +17,20 @@ const Logic = () => {
         },
       ],
     });
+  };
+
+  const updateAppointments = async () => {
+    fetchAppointments(
+      {},
+      (res) => {
+        console.log("res: ", res);
+        updateProp("appointments", res.data);
+      },
+      (err) => {
+        console.log("err: ", err);
+      },
+      () => {}
+    );
   };
 
   useEffect(() => {
@@ -33,6 +48,7 @@ const Logic = () => {
     };
 
     getDashboardData();
+    updateAppointments();
   }, []);
 
   return {

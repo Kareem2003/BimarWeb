@@ -20,6 +20,7 @@ import {
 } from "recharts";
 import AppInput from "../../components/AppInput";
 import { DASHBOARD_SECTIONS } from "../../helpers/constants/StaticKeys";
+import Logic from "./logic";
 
 const getIconComponent = (id) => {
   switch (id) {
@@ -35,6 +36,10 @@ const getIconComponent = (id) => {
 };
 
 const DashboardScreen = () => {
+  const { state, updateProp } = Logic();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  
   const [mainSections, setMainSections] = useState(() => {
     // Try to get saved order from localStorage
     const savedSections = localStorage.getItem(DASHBOARD_SECTIONS);
@@ -106,34 +111,11 @@ const DashboardScreen = () => {
         id: "patients-table",
         content: {
           type: "table",
-          title: "Recent Patients",
-          data: [
-            {
-              id: 1,
-              name: "John Doe",
-              date: "2023-10-01",
-              status: "Completed",
-            },
-            {
-              id: 2,
-              name: "Jane Smith",
-              date: "2023-10-02",
-              status: "Pending",
-            },
-            {
-              id: 3,
-              name: "Alice Johnson",
-              date: "2023-10-03",
-              status: "Completed",
-            },
-          ],
+          title: "Recent Patients"
         },
       },
     ];
   });
-
-  const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
 
   useEffect(() => {
     const sectionsToSave = mainSections.map((section) => {
@@ -155,16 +137,62 @@ const DashboardScreen = () => {
   const columns = useMemo(
     () => [
       {
+        Header: "Profile",
+        accessor: "patientId.profileImage",
+        Cell: ({ row }) => (
+          <div className="flex items-center">
+            {row.original.patientId.profileImage ? (
+              <img
+                src={row.original.patientId.profileImage}
+                alt="Profile"
+                className="w-8 h-8 rounded-full"
+              />
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
+                <FaUserInjured className="text-gray-500" />
+              </div>
+            )}
+          </div>
+        ),
+      },
+      {
         Header: "Name",
-        accessor: "name",
+        accessor: "patientId.userName",
         Cell: ({ value }) => (
           <span className="font-medium text-gray-900">{value}</span>
         ),
       },
       {
-        Header: "Date",
-        accessor: "date",
+        Header: "Phone",
+        accessor: "patientId.userPhone",
         Cell: ({ value }) => <span className="text-gray-600">{value}</span>,
+      },
+      {
+        Header: "Date",
+        accessor: "appointmentDate",
+        Cell: ({ value }) => (
+          <span className="text-gray-600">
+            {new Date(value).toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'short',
+              day: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit'
+            })}
+          </span>
+        ),
+      },
+      {
+        Header: "Booking Number",
+        accessor: "bookingNumber",
+        Cell: ({ value }) => <span className="text-gray-600">#{value}</span>,
+      },
+      {
+        Header: "Booking Type",
+        accessor: "bookingType",
+        Cell: ({ value }) => (
+          <span className="text-gray-600 capitalize">{value.replace('-', ' ')}</span>
+        ),
       },
       {
         Header: "Status",
@@ -175,6 +203,21 @@ const DashboardScreen = () => {
               value === "Completed"
                 ? "bg-primary text-background"
                 : "bg-tertiary text-amber-800"
+            }`}
+          >
+            {value}
+          </span>
+        ),
+      },
+      {
+        Header: "Payment Status",
+        accessor: "paymentStatus",
+        Cell: ({ value }) => (
+          <span
+            className={`px-2.5 py-1 rounded-full text-xs font-medium ${
+              value === "Paid"
+                ? "bg-green-100 text-green-800"
+                : "bg-yellow-100 text-yellow-800"
             }`}
           >
             {value}
@@ -198,14 +241,13 @@ const DashboardScreen = () => {
     []
   );
 
-  const filteredPatients =
-    mainSections
-      .find((s) => s.id === "patients-table")
-      ?.content?.data?.filter(
-        (patient) =>
-          patient.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
-          (statusFilter === "all" || patient.status === statusFilter)
-      ) || [];
+  const filteredPatients = state.appointments?.filter(
+    (patient) => {
+      if (!patient || !patient.patientId) return false;
+      return patient.patientId.userName.toLowerCase().includes(searchQuery.toLowerCase()) &&
+        (statusFilter === "all" || patient.status === statusFilter);
+    }
+  ) || [];
 
   const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } =
     useTable({
@@ -513,7 +555,7 @@ const DashboardScreen = () => {
                             {filteredPatients.length === 0 && (
                               <div className="text-center py-6 bg-white">
                                 <p className="text-gray-500">
-                                  No patients found
+                                  {state.appointments?.length === 0 ? "Loading appointments..." : "No patients found"}
                                 </p>
                               </div>
                             )}
