@@ -11,6 +11,7 @@ import { DOCTOR_INFO } from "./helpers/constants/StaticKeys";
 import DashboardScreen from "./pages/Dashboard";
 import AccessScreen from "./pages/Access";
 import MedicalRecordsScreen from "./pages/MedicalRecords";
+import ResetPasswordScreen from './pages/ResetPassword';
     //     <Route path="/access/:token" element={<AccessPage />} /> </Routes>
 const Routers = () => {
   return useRoutes([
@@ -20,6 +21,7 @@ const Routers = () => {
     { path: "otp", element: <OTPScreen /> },
     { path: "medicalRecords", element: <MedicalRecordsScreen /> },
     { path: "access", element: <AccessScreen /> },
+    { path: 'reset-password', element: <ResetPasswordScreen /> },
     {
       path: "/access/:token",
       element: (

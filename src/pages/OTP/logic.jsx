@@ -1,12 +1,16 @@
 import { reducer } from "../../reducers/reducer";
 import { useReducer } from "react";
 import { INITIAL_STATE } from "./constant";
+import { useNavigate } from 'react-router-dom';
 
 import ACTION_TYPES from "../../reducers/actionTypes";
-import { doctorLogin } from "../../api/services/AuthServices";
+import { doctorLogin, verifyOTP } from "../../api/services/AuthServices";
 import { ToastManager } from "../../helpers/ToastManager";
+
 const Logic = () => {
   const [state, dispatch] = useReducer(reducer, INITIAL_STATE);
+  const navigate = useNavigate();
+
   const updateProp = (prop, value) => {
     dispatch({
       payload: [{ type: ACTION_TYPES.UPDATE_PROP, prop: prop, value: value }],
@@ -32,7 +36,31 @@ const Logic = () => {
     console.log("Logging in with", state.doctorEmail, state.doctorPassword);
   };
 
-  return { state, updateProp, handleLogin };
+  const handleVerifyOTP = () => {
+    if (!state.otp) {
+      ToastManager.notify("Please enter the OTP", { type: "error" });
+      return;
+    }
+
+    verifyOTP(
+      {
+        email: state.email,
+        otp: state.otp
+      },
+      (res) => {
+        ToastManager.notify("OTP verified successfully!", { type: "success" });
+        navigate('/reset-password'); // Navigate to new password page
+      },
+      (err) => {
+        ToastManager.notify(err.response?.data?.message || "Invalid OTP", { 
+          type: "error" 
+        });
+      },
+      () => {}
+    );
+  };
+
+  return { state, updateProp, handleLogin, handleVerifyOTP };
 };
 
 export default Logic;

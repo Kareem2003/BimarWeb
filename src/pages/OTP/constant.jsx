@@ -3,4 +3,6 @@ export const INITIAL_STATE = {
   doctorPassword: "",
   showPassword: false,
   isLoading: false,
+  email: "",
+  otp: "",
 };

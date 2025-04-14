@@ -47,24 +47,29 @@ const Logic = () => {
           .split("; ")
           .find((row) => row.startsWith("jwt="));
         if (token) {
-          const authToken = token.split("=")[1]; // Get the token value
+          const authToken = token.split("=")[1];
           localStorage.setItem(AUTHENTICATION_TOKEN, authToken);
           localStorage.setItem(DOCTOR_INFO, JSON.stringify(res.doctor));
-          navigate("/"); // Use the navigate function
-          ToastManager.notify(res.data, { type: res.status });
+          navigate("/");
+          ToastManager.notify("Login successful!", { type: "success" });
         } else {
           console.error("No authentication token received.");
-          ToastManager.notify("Error happened while logging in!", {
+          ToastManager.notify("Login failed. Please check your credentials.", {
             type: "error",
           });
         }
       },
       (err) => {
         console.log("err", err);
+        // Handle specific error cases
+        const errorMessage = err.response?.data?.message || "Invalid email or password";
+        ToastManager.notify(errorMessage, {
+          type: "error",
+          duration: 3000
+        });
       },
       () => {}
     );
-    console.log("Logging in with", state.doctorEmail, state.doctorPassword);
   };
 
   return { state, updateProp, handleLogin };
