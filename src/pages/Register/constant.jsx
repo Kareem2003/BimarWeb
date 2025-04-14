@@ -25,6 +25,7 @@ export const INITIAL_STATE = {
           day: "",
           workingHours: [{ start: "", end: "" }],
           examinationDuration: 0,
+          NoBookings: 0,
         },
       ],
       clinicLocationLinks: "",

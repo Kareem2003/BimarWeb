@@ -156,6 +156,10 @@ const Logic = () => {
           `clinic[${clinicIndex}][clinicWorkDays][${workDayIndex}][examinationDuration]`,
           workDay.examinationDuration
         );
+        formData.append(
+          `clinic[${clinicIndex}][clinicWorkDays][${workDayIndex}][NoBookings]`,
+          workDay.NoBookings
+        );
         workDay.workingHours.forEach((slot, slotIndex) => {
           formData.append(
             `clinic[${clinicIndex}][clinicWorkDays][${workDayIndex}][workingHours][${slotIndex}]`,

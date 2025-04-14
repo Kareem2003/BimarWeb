@@ -14,27 +14,27 @@ const AppSelect = ({
   editable = true,
 }) => {
   return (
-    <div className={`${backgroundStyle}`}>
+    <div className={`w-full flex flex-col items-center ${backgroundStyle}`}>
       <div
-        className={`w-96 flex items-center justify-center rounded-lg shadow-md bg-secondary ${selectWrapperStyle}`}
+        className={`w-[90%] flex items-center justify-center rounded-3xl shadow-md bg-white/10 ${selectWrapperStyle}`}
       >
         <select
           name={name}
-          value={selectedValue || ""} // Ensure value is always defined
+          value={selectedValue || ""}
           onChange={onChange}
-          className={`flex-1 items-center justify-center text-lg p-1 pl-4 bg-secondary rounded-lg ${selectStyle} text-primary focus:outline-none ${
+          className={`w-full p-2 pl-5 text-lg bg-white/10 rounded-3xl ${selectStyle} text-white focus:outline-none ${
             !editable ? "cursor-not-allowed opacity-50" : ""
           }`}
           disabled={!editable}
         >
-          <option value="" disabled>
+          <option value="" disabled className="text-white bg-gray-800">
             {placeholder}
           </option>
           {options.map((option) => (
             <option
               key={option.value}
               value={option.value}
-              className="text-primary"
+              className="text-black bg-gray-800"
             >
               {option.label}
             </option>
@@ -42,7 +42,7 @@ const AppSelect = ({
         </select>
       </div>
       {validationText && (
-        <p className="mt-1 text-xs text-red-600 opacity-80 text-right">
+        <p className="mt-1 text-xs text-red-600 opacity-80 text-right w-[90%]">
           {validationText}
         </p>
       )}

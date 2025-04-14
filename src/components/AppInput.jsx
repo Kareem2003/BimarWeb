@@ -29,24 +29,24 @@ const AppInput = ({
   };
 
   return (
-    <div className={`${backgroundStyle}`}>
+    <div className={`w-full flex flex-col items-center ${backgroundStyle}`}>
       <div
-        className={`w-96 flex items-center justify-center rounded-lg shadow-md bg-secondary ${inputWrapperStyle}`}
+        className={`w-[90%] flex items-center justify-center rounded-3xl shadow-md bg-white/10 ${inputWrapperStyle}`}
       >
         <input
-          type={type} // Use the type prop
-          className={`flex-1 items-center justify-center text-lg p-1 pl-4 bg-secondary rounded-lg ${inputStyle} placeholder:text-primary placeholder:opacity-50 focus:outline-none`}
+          type={type}
+          className={`w-full p-2 pl-5 text-lg bg-white/10 rounded-3xl ${inputStyle} placeholder:text-white placeholder:opacity-80 focus:outline-none text-white`}
           placeholder={placeholder}
           value={term}
           onChange={type === "file" ? handleFileChange : onChangeText}
           onKeyPress={(e) => e.key === "Enter" && onSubmitEditing()}
           disabled={!editable}
-          multiple={multiple} // Add this line to allow multiple file selection
+          multiple={multiple}
         />
         {iconName && (
-          <button onClick={onIconPress} className="p-2 pr-4 cursor-pointer">
+          <button onClick={onIconPress} className="absolute right-[20%] p-2 cursor-pointer">
             <i
-              className={`fa fa-${iconName} text-${iconSize} text-primary ${iconStyle}`}
+              className={`fa fa-${iconName} text-${iconSize} text-white hover:text-tertiary ${iconStyle}`}
             />
           </button>
         )}
