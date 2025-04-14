@@ -22,6 +22,7 @@ import {
 import AppInput from "../../components/AppInput1.jsx";
 import { DASHBOARD_SECTIONS } from "../../helpers/constants/StaticKeys";
 import Logic from "./logic";
+import { useNavigate } from "react-router-dom";
 
 const getIconComponent = (id) => {
   switch (id) {
@@ -49,6 +50,7 @@ const DashboardScreen = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [displayCount, setDisplayCount] = useState(5);
+  const navigate = useNavigate();
   
   const [mainSections, setMainSections] = useState(() => {
     // Try to get saved order from localStorage
@@ -410,6 +412,18 @@ const DashboardScreen = () => {
     setDisplayCount(prev => prev + 5);
   };
 
+  const handleRowClick = (patient) => {
+    const doctorData = JSON.parse(localStorage.getItem("DOCTOR_INFO"));
+    navigate('/medicalRecords', { 
+      state: { 
+        patientId: patient._id,
+        patientName: patient.userName,
+        patientEmail: patient.userEmail,
+        doctorEmail: doctorData.doctorEmail 
+      } 
+    });
+  };
+
   return (
     <div className="p-6 bg-gray-50 min-h-screen relative">
       {loading && (
@@ -670,18 +684,27 @@ const DashboardScreen = () => {
                                     return (
                                       <tr
                                         {...row.getRowProps()}
-                                        className="hover:bg-gray-50 transition-colors"
+                                        className="hover:bg-gray-50 transition-colors cursor-pointer"
                                         key={rowIndex}
                                       >
-                                        {row.cells.map((cell, cellIndex) => (
-                                          <td
-                                            {...cell.getCellProps()}
-                                            className="px-6 py-4 whitespace-nowrap"
-                                            key={cellIndex}
-                                          >
-                                            {cell.render("Cell")}
-                                          </td>
-                                        ))}
+                                        {row.cells.map((cell, cellIndex) => {
+                                          const isActionsColumn = cellIndex === row.cells.length - 1;
+                                          
+                                          return (
+                                            <td
+                                              {...cell.getCellProps()}
+                                              className={`px-6 py-4 whitespace-nowrap ${!isActionsColumn ? 'cursor-pointer' : ''}`}
+                                              key={cellIndex}
+                                              onClick={() => {
+                                                if (!isActionsColumn) {
+                                                  handleRowClick(row.original.patientId);
+                                                }
+                                              }}
+                                            >
+                                              {cell.render("Cell")}
+                                            </td>
+                                          );
+                                        })}
                                       </tr>
                                     );
                                   })}

@@ -35,9 +35,9 @@ const Routers = () => {
       path: "/medicalRecords",
       element: (
         <ProtectedRoute>
-          <Layout>
+          {/* <Layout> */}
             <MedicalRecordsScreen />
-          </Layout>
+          {/* </Layout> */}
         </ProtectedRoute>
       ),
     },

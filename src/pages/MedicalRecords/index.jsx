@@ -154,49 +154,77 @@ const MedicalRecordsScreen = () => {
     updateProp('prescriptions', updatedPrescriptions);
   };
 
-  const AccessPopup = () => (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl p-6 w-[400px]">
-        <h3 className="text-[18.1px] font-extrabold mb-4">Request Access</h3>
-        <div className="space-y-4">
-          <div>
-            <label className="text-[18.1px] font-medium mb-2 block">Patient Email</label>
-            <input 
-              type="email" 
-              className="w-full p-2 border rounded" 
-              placeholder="Enter patient email"
-              value={state.patientEmail}
-              onChange={(e) => updateProp('patientEmail', e.target.value)}
-            />
-          </div>
-          <div>
-            <label className="text-[18.1px] font-medium mb-2 block">Access Duration (minutes)</label>
-            <input 
-              type="number" 
-              className="w-full p-2 border rounded" 
-              placeholder="Enter duration in minutes"
-              value={state.accessDuration}
-              onChange={(e) => updateProp('accessDuration', e.target.value)}
-            />
-          </div>
-          <div className="flex justify-end gap-2">
-            <button 
-              className="px-4 py-2 rounded text-gray-600"
-              onClick={() => setShowAccessPopup(false)}
-            >
-              Cancel
-            </button>
-            <button 
-              className="bg-[#16423C] font-bold text-white px-4 py-2 rounded"
-              onClick={handleRequestAccess}
-            >
-              Request Access
-            </button>
+  const AccessPopup = () => {
+    // Use local state for form inputs
+    const [formData, setFormData] = useState({
+      patientEmail: state.patientEmail || '',
+      accessDuration: state.accessDuration || ''
+    });
+
+    // Handle input changes
+    const handleInputChange = (e) => {
+      const { name, value } = e.target;
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    };
+
+    // Handle form submission
+    const handleSubmit = () => {
+      // Update the global state before making the request
+      updateProp('patientEmail', formData.patientEmail);
+      updateProp('accessDuration', formData.accessDuration);
+      handleRequestAccess();
+    };
+
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white rounded-xl p-6 w-[400px]">
+          <h3 className="text-[18.1px] font-extrabold mb-4">Request Access</h3>
+          <div className="space-y-4">
+            <div>
+              <label className="text-[18.1px] font-medium mb-2 block">Patient Email</label>
+              <input 
+                type="email" 
+                name="patientEmail"
+                className="w-full p-2 border rounded" 
+                placeholder="Enter patient email"
+                value={formData.patientEmail}
+                onChange={handleInputChange}
+                autoFocus // Add autofocus to automatically focus the email input when popup opens
+              />
+            </div>
+            <div>
+              <label className="text-[18.1px] font-medium mb-2 block">Access Duration (minutes)</label>
+              <input 
+                type="number" 
+                name="accessDuration"
+                className="w-full p-2 border rounded" 
+                placeholder="Enter duration in minutes"
+                value={formData.accessDuration}
+                onChange={handleInputChange}
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <button 
+                className="px-4 py-2 rounded text-gray-600"
+                onClick={() => setShowAccessPopup(false)}
+              >
+                Cancel
+              </button>
+              <button 
+                className="bg-[#16423C] font-bold text-white px-4 py-2 rounded"
+                onClick={handleSubmit}
+              >
+                Request Access
+              </button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
 
 
