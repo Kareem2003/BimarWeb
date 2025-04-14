@@ -9,6 +9,7 @@ import {
   FaSearch,
   FaRegEdit,
   FaRegTrashAlt,
+  FaTimes
 } from "react-icons/fa";
 import {
   LineChart,
@@ -18,7 +19,7 @@ import {
   CartesianGrid,
   Tooltip,
 } from "recharts";
-import AppInput from "../../components/AppInput";
+import AppInput from "../../components/AppInput1.jsx";
 import { DASHBOARD_SECTIONS } from "../../helpers/constants/StaticKeys";
 import Logic from "./logic";
 
@@ -36,9 +37,18 @@ const getIconComponent = (id) => {
 };
 
 const DashboardScreen = () => {
-  const { state, updateProp } = Logic();
+  const { 
+    state, 
+    error, 
+    loading,
+    setError, 
+    updateProp, 
+    handleCancelAppointment, 
+    handleDeleteAppointment 
+  } = Logic();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [displayCount, setDisplayCount] = useState(5);
   
   const [mainSections, setMainSections] = useState(() => {
     // Try to get saved order from localStorage
@@ -185,74 +195,175 @@ const DashboardScreen = () => {
       {
         Header: "Booking Number",
         accessor: "bookingNumber",
-        Cell: ({ value }) => <span className="text-gray-600">#{value}</span>,
+        Cell: ({ value }) => (
+          <div className="flex justify-center">
+            <span className="text-gray-600">#{value}</span>
+          </div>
+        ),
       },
       {
         Header: "Booking Type",
         accessor: "bookingType",
         Cell: ({ value }) => (
-          <span className="text-gray-600 capitalize">{value.replace('-', ' ')}</span>
+          <div className="flex justify-center">
+            <span className="text-gray-600 capitalize">{value.replace('-', ' ')}</span>
+          </div>
         ),
       },
       {
         Header: "Status",
         accessor: "status",
-        Cell: ({ value }) => (
-          <span
-            className={`px-2.5 py-1 rounded-full text-xs font-medium ${
-              value === "Completed"
-                ? "bg-primary text-background"
-                : "bg-tertiary text-amber-800"
-            }`}
-          >
-            {value}
-          </span>
-        ),
+        Cell: ({ value }) => {
+          console.log("Status value:", value, "Type:", typeof value);
+          
+          // Case-insensitive comparison
+          const statusLower = value?.toLowerCase();
+          
+          // Create the appropriate status element based on value
+          let statusElement;
+          
+          // For Completed - keep existing green
+          if (statusLower === "completed") {
+            statusElement = (
+              <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-primary text-background inline-block">
+                {value}
+              </span>
+            );
+          }
+          // For Cancelled - change to red
+          else if (statusLower === "cancelled") {
+            statusElement = (
+              <span style={{
+                padding: '0.25rem 0.5rem',
+                borderRadius: '9999px',
+                fontSize: '0.75rem',
+                fontWeight: '500',
+                display: 'inline-block',
+                backgroundColor: '#EF4444',  // bg-red-500
+                color: 'white'
+              }}>
+                {value}
+              </span>
+            );
+          }
+          // For Pending or any other status - keep existing amber/yellow
+          else {
+            statusElement = (
+              <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-tertiary text-amber-800 inline-block">
+                {value}
+              </span>
+            );
+          }
+          
+          // Return the status element wrapped in a centered container
+          return (
+            <div className="flex justify-center">
+              {statusElement}
+            </div>
+          );
+        },
       },
       {
         Header: "Payment Status",
         accessor: "paymentStatus",
         Cell: ({ value }) => (
-          <span
-            className={`px-2.5 py-1 rounded-full text-xs font-medium ${
-              value === "Paid"
-                ? "bg-green-100 text-green-800"
-                : "bg-yellow-100 text-yellow-800"
-            }`}
-          >
-            {value}
-          </span>
+          <div className="flex justify-center">
+            <span
+              className={`px-2.5 py-1 rounded-full text-xs font-medium ${
+                value === "Paid"
+                  ? "bg-green-100 text-green-800"
+                  : "bg-yellow-100 text-yellow-800"
+              }`}
+            >
+              {value}
+            </span>
+          </div>
         ),
       },
       {
         Header: "Actions",
-        Cell: () => (
-          <div className="flex gap-2">
-            <button className="text-primary hover:text-indigo-900 transition-colors">
-              <FaRegEdit className="w-4 h-4" />
-            </button>
-            <button className="text-red transition-colors">
-              <FaRegTrashAlt className="w-4 h-4" />
-            </button>
-          </div>
-        ),
+        Cell: ({ row }) => {
+          // State to track if the tooltip is visible
+          const [tooltipVisible, setTooltipVisible] = useState(false);
+
+          return (
+            <div className="flex justify-center relative">
+              {loading ? (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-500"></div>
+              ) : (
+                <div 
+                  className="relative flex flex-col items-center"
+                  onMouseEnter={() => setTooltipVisible(true)}
+                  onMouseLeave={() => setTooltipVisible(false)}
+                >
+                  <button 
+                    className="hover:text-red-500 transition-colors duration-200 text-gray-600"
+                    onClick={() => {
+                      if (row.original.status === "Pending") {
+                        handleCancelAppointment(row.original._id);
+                      } else {
+                        handleDeleteAppointment(row.original._id);
+                      }
+                    }}
+                    disabled={loading}
+                    style={{ transition: 'color 0.2s ease' }}
+                    onMouseOver={(e) => e.currentTarget.style.color = '#EF4444'} 
+                    onMouseOut={(e) => e.currentTarget.style.color = '#4B5563'} 
+                  >
+                    {row.original.status === "Pending" ? (
+                      <FaTimes className="w-5 h-5" />
+                    ) : (
+                      <FaRegTrashAlt className="w-5 h-5" />
+                    )}
+                  </button>
+                  
+                  {/* Tooltip that appears on hover */}
+                  {tooltipVisible && (
+                    <div 
+                      className="absolute top-full -translate-x-1/2 left-1/2 mt-1 bg-white shadow-lg rounded px-2 py-1 text-xs font-medium text-black whitespace-nowrap z-10"
+                      style={{ 
+                        transform: 'translateX(-50%)',
+                        maxWidth: 'fit-content',
+                        pointerEvents: 'none'  // Prevents the tooltip from capturing mouse events
+                      }}
+                    >
+                      {row.original.status === "Pending" ? "Cancel" : "Delete"}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        },
       },
     ],
     []
   );
 
-  const filteredPatients = state.appointments?.filter(
-    (patient) => {
-      if (!patient || !patient.patientId) return false;
-      return patient.patientId.userName.toLowerCase().includes(searchQuery.toLowerCase()) &&
-        (statusFilter === "all" || patient.status === statusFilter);
-    }
-  ) || [];
+  const filteredPatients = useMemo(() => {
+    const filtered = state.appointments?.filter(
+      (patient) => {
+        if (!patient || !patient.patientId) return false;
+        
+        return patient.patientId.userName.toLowerCase().includes(searchQuery.toLowerCase()) &&
+          (statusFilter === "all" || patient.status.toLowerCase() === statusFilter.toLowerCase());
+      }
+    ) || [];
+    
+    // Sort by appointment date (oldest first)
+    return filtered.sort((a, b) => {
+      return new Date(a.appointmentDate) - new Date(b.appointmentDate);
+    });
+  }, [state.appointments, searchQuery, statusFilter]);
+
+  const paginatedPatients = useMemo(() => {
+    return filteredPatients.slice(0, displayCount);
+  }, [filteredPatients, displayCount]);
 
   const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } =
     useTable({
       columns,
-      data: filteredPatients,
+      data: paginatedPatients
     });
 
   const onDragEnd = (result) => {
@@ -295,8 +406,33 @@ const DashboardScreen = () => {
     }
   };
 
+  const handleLoadMore = () => {
+    setDisplayCount(prev => prev + 5);
+  };
+
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="p-6 bg-gray-50 min-h-screen relative">
+      {loading && (
+        <div className="absolute inset-0 bg-black bg-opacity-10 flex items-center justify-center z-50">
+          <div className="bg-white p-4 rounded-lg shadow-lg flex items-center space-x-4">
+            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+            <p className="text-gray-700">Loading...</p>
+          </div>
+        </div>
+      )}
+      
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+          <strong>Error:</strong> {error}
+          <button 
+            className="float-right"
+            onClick={() => setError(null)}
+          >
+            &times;
+          </button>
+        </div>
+      )}
+      
       <h1 className="text-3xl font-bold text-gray-800 mb-2">Dashboard</h1>
       <h2 className="text-xl text-gray-600 mb-6">Welcome, Kareem</h2>
 
@@ -495,11 +631,12 @@ const DashboardScreen = () => {
                               <option value="all">All Statuses</option>
                               <option value="Completed">Completed</option>
                               <option value="Pending">Pending</option>
+                              <option value="cancelled">Cancelled</option>
                             </select>
                           </div>
 
                           <div className="border border-gray-200 rounded-lg overflow-hidden shadow-sm">
-                            <div className="overflow-x-auto">
+                            <div className="overflow-x-auto" style={{ overflowY: 'hidden' }}>
                               <table
                                 {...getTableProps()}
                                 className="w-full divide-y divide-gray-200"
@@ -514,7 +651,7 @@ const DashboardScreen = () => {
                                         (column, columnIndex) => (
                                           <th
                                             {...column.getHeaderProps()}
-                                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                            className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
                                             key={columnIndex}
                                           >
                                             {column.render("Header")}
@@ -548,6 +685,22 @@ const DashboardScreen = () => {
                                       </tr>
                                     );
                                   })}
+                                  
+                                  {filteredPatients.length > displayCount && (
+                                    <tr>
+                                      <td colSpan={columns.length} className="px-6 py-4">
+                                        <button 
+                                          onClick={handleLoadMore}
+                                          className="w-full py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-md transition-colors flex items-center justify-center"
+                                        >
+                                          Load More
+                                          <svg className="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                          </svg>
+                                        </button>
+                                      </td>
+                                    </tr>
+                                  )}
                                 </tbody>
                               </table>
                             </div>
@@ -555,7 +708,16 @@ const DashboardScreen = () => {
                             {filteredPatients.length === 0 && (
                               <div className="text-center py-6 bg-white">
                                 <p className="text-gray-500">
-                                  {state.appointments?.length === 0 ? "Loading appointments..." : "No patients found"}
+                                  {loading ? (
+                                    <div className="flex items-center justify-center">
+                                      <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-primary mr-2"></div>
+                                      Loading appointments...
+                                    </div>
+                                  ) : state.appointments?.length === 0 ? (
+                                    "No appointments found"
+                                  ) : (
+                                    "No matching patients found"
+                                  )}
                                 </p>
                               </div>
                             )}
