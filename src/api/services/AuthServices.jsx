@@ -85,3 +85,20 @@ export const doctorResetPassword = (payload, onSuccess, onError, onFinally) => {
       onFinally();
     });
 };
+
+export const ProfileScreen = (payload, onSuccess, onError, onFinally) => {
+  $axios
+    .post(`/doctor/profile`, {
+      email: payload.email,
+      newPassword: payload.newPassword
+    })
+    .then((response) => {
+      onSuccess(response);
+    })
+    .catch((error) => {
+      onError(error);
+    })
+    .finally(() => {
+      onFinally();
+    });
+};

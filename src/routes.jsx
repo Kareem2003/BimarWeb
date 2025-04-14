@@ -12,16 +12,35 @@ import DashboardScreen from "./pages/Dashboard";
 import AccessScreen from "./pages/Access";
 import MedicalRecordsScreen from "./pages/MedicalRecords";
 import ResetPasswordScreen from './pages/ResetPassword';
-    //     <Route path="/access/:token" element={<AccessPage />} /> </Routes>
+
 const Routers = () => {
   return useRoutes([
-    { path: "login", element: <LoginScreen /> },
-    { path: "register", element: <RegisterScreen /> },
-    { path: "forget-password", element: <ForgetPasswordScreen /> },
-    { path: "otp", element: <OTPScreen /> },
-    { path: "medicalRecords", element: <MedicalRecordsScreen /> },
-    { path: "access", element: <AccessScreen /> },
-    { path: 'reset-password', element: <ResetPasswordScreen /> },
+    { path: "/login", element: <LoginScreen /> },
+    { path: "/register", element: <RegisterScreen /> },
+    { path: "/forget-password", element: <ForgetPasswordScreen /> },
+    { path: "/otp", element: <OTPScreen /> },
+    { path: "/reset-password", element: <ResetPasswordScreen /> },
+    // Move profile route out of children and make it a separate protected route
+    {
+      path: "/profile",
+      element: (
+        <ProtectedRoute>
+          <Layout>
+            <ProfileScreen />
+          </Layout>
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: "/medicalRecords",
+      element: (
+        <ProtectedRoute>
+          <Layout>
+            <MedicalRecordsScreen />
+          </Layout>
+        </ProtectedRoute>
+      ),
+    },
     {
       path: "/access/:token",
       element: (
@@ -41,12 +60,6 @@ const Routers = () => {
           </Layout>
         </ProtectedRoute>
       ),
-      children: [
-        {
-          path: "profile",
-          element: <ProfileScreen />,
-        },
-      ],
     }
   ]);
 };

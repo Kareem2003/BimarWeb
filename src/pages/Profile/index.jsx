@@ -16,6 +16,7 @@ import {
   faMapPin,
 } from "@fortawesome/free-solid-svg-icons";
 import { DOCTOR_INFO } from "../../helpers/constants/StaticKeys";
+import DoctorImage from "../../assets/WhatsApp Image 2023-07-23 at 15.23.54.jpg";
 
 const ProfileScreen = () => {
   const { state, updateProp } = Logic();
@@ -26,41 +27,49 @@ const ProfileScreen = () => {
   };
 
   return (
-    <div className="bg-gray-50 min-h-screen">
-      {/* Profile Header */}
-      {/* <div className="bg-primary text-white py-12">
-        <div className="container mx-auto px-6 text-center">
-          <div className="w-32 h-32 mx-auto bg-white rounded-full flex items-center justify-center mb-6">
-            <FontAwesomeIcon icon={faUser} className="text-6xl text-primary" />
+    <div className="w-full min-h-screen overflow-auto p-6">
+      {/* Content Container */}
+      <div className="container mx-auto">
+        {/* Profile Header */}
+        <div className="bg-primary rounded-xl shadow-lg p-8 mb-8">
+          <div className="flex items-center gap-8">
+            <div className="w-32 h-32 rounded-full shadow-lg overflow-hidden">
+              <img
+                src={state.doctorImage}
+                onError={(e) => (e.target.src = DoctorImage)}
+                alt="Profile"
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <div>
+              <h1 className="text-4xl font-bold text-white">
+                {state.doctorName}
+              </h1>
+              <p className="text-xl text-tertiary mt-2">{state.field}</p>
+            </div>
           </div>
-          <h1 className="text-3xl font-bold">{state.doctorName}</h1>
-          <p className="text-gray-200 mt-2">{state.field}</p>
         </div>
-      </div> */}
 
-      <div className="bg-primary text-white py-12">
-        <div className="container mx-auto px-6 text-center">
-          <div className="w-32 h-32 mx-auto bg-white rounded-full flex items-center justify-center mb-6">
-            <img
-              src={state.doctorImage}
-              alt="Profile"
-              className="w-32 h-32 rounded-full border-4 border-white shadow-lg"
-            />
-          </div>
-          <h1 className="text-3xl font-bold">{state.doctorName}</h1>
-          <p className="text-gray-200 mt-2">{state.field}</p>
-        </div>
-      </div>
-
-      {/* Profile Details */}
-      <div className="container mx-auto px-6 py-8">
+        {/* Info Cards Container */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* Left Section: Personal Information */}
-          <div className="bg-white rounded-lg shadow-lg p-8">
-            <h2 className="text-2xl font-bold text-primary mb-6">
-              Personal Information
-            </h2>
-
+          {/* Personal Information Card */}
+          <div className="bg-white rounded-xl shadow-lg p-8">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-tertiary">
+                Personal Information
+              </h2>
+              <button
+                onClick={handleEditToggle}
+                className={`px-6 py-2 rounded-lg transition-colors ${
+                  isEditing
+                    ? "bg-tertiary text-primary"
+                    : "bg-primary text-white hover:bg-primary/80"
+                }`}
+              >
+                {isEditing ? "Save" : "Edit"}
+              </button>
+            </div>
+            <hr className="mb-5"></hr>
             <div className="space-y-6">
               <div className="flex items-center space-x-4">
                 <FontAwesomeIcon
@@ -189,22 +198,15 @@ const ProfileScreen = () => {
                   )}
                 </div>
               </div>
-
-              <button
-                onClick={handleEditToggle}
-                className="mt-4 bg-primary text-white py-2 px-4 rounded"
-              >
-                {isEditing ? "Save" : "Edit"}
-              </button>
             </div>
           </div>
 
-          {/* Right Section: Professional Information */}
-          <div className="bg-white rounded-lg shadow-lg p-8">
-            <h2 className="text-2xl font-bold text-primary mb-6">
+          {/* Professional Information Card */}
+          <div className="bg-white rounded-xl shadow-lg p-8">
+            <h2 className="text-2xl font-bold text-tertiary mb-6">
               Professional Information
             </h2>
-
+            <hr className="mb-5 mt-8"></hr>
             <div className="space-y-6">
               <div className="flex items-center space-x-4">
                 <FontAwesomeIcon
@@ -289,9 +291,14 @@ const ProfileScreen = () => {
                       className="text-lg font-semibold border-b border-gray-300"
                     />
                   ) : (
-                    <p className="text-lg font-semibold">
-                      {state.syndicateCard}
-                    </p>
+                    <a
+                      href={state.syndicateCard}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-lg font-semibold text-tertiary hover:text-primary-dark underline"
+                    >
+                      View Syndicate Card
+                    </a>
                   )}
                 </div>
               </div>
@@ -313,18 +320,47 @@ const ProfileScreen = () => {
                       className="text-lg font-semibold border-b border-gray-300"
                     />
                   ) : (
-                    <p className="text-lg font-semibold">
-                      {state.certificates}
-                    </p>
+                    <div>
+                      {Array.isArray(state.certificates) ? (
+                        state.certificates.map((cert, idx) => (
+                          <a
+                            key={idx}
+                            href={cert}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-lg font-semibold text-tertiary hover:text-primary-dark underline block"
+                          >
+                            View Certificate {idx + 1}
+                          </a>
+                        ))
+                      ) : (
+                        <a
+                          href={state.certificates}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-lg font-semibold text-tertiary hover:text-primary-dark underline"
+                        >
+                          View Certificate
+                        </a>
+                      )}
+                    </div>
                   )}
                 </div>
               </div>
+            </div>
+          </div>
 
-              {/* Clinic Information */}
+          {/* Clinic Information Card - Full Width */}
+          <div className="md:col-span-2 bg-primary rounded-xl shadow-lg p-8">
+            <h2 className="text-2xl font-bold text-white mb-6">
+              Clinic Information
+            </h2>
+            <div className="grid md:grid-cols-1 gap-8">
+              {/* Clinic Info Fields */}
               {state.clinic && state.clinic.length > 0 ? (
                 state.clinic.map((clinic, index) => (
                   <div key={index} className="space-y-4 border-t pt-4">
-                    <h3 className="text-xl font-semibold text-primary">
+                    <h3 className="text-xl font-semibold text-tertiary">
                       Clinic {index + 1}
                     </h3>
 
@@ -334,7 +370,7 @@ const ProfileScreen = () => {
                         className="text-primary w-6 h-6"
                       />
                       <div>
-                        <p className="text-gray-600">Clinic License</p>
+                        <p className="text-white">Clinic License</p>
                         {isEditing ? (
                           <input
                             type="text"
@@ -345,12 +381,17 @@ const ProfileScreen = () => {
                                 e.target.value
                               )
                             }
-                            className="text-lg font-semibold border-b border-gray-300"
+                            className="text-lg font-semibold border-b border-gray-300 bg-primary text-white"
                           />
                         ) : (
-                          <p className="text-lg font-semibold">
-                            {clinic.clinicLicense}
-                          </p>
+                          <a
+                            href={clinic.clinicLicense}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-lg font-semibold text-tertiary hover:text-primary-dark underline"
+                          >
+                            View Clinic License
+                          </a>
                         )}
                       </div>
                     </div>
@@ -361,7 +402,7 @@ const ProfileScreen = () => {
                         className="text-primary w-6 h-6"
                       />
                       <div>
-                        <p className="text-gray-600">Clinic City</p>
+                        <p className="text-white">Clinic City</p>
                         {isEditing ? (
                           <input
                             type="text"
@@ -372,10 +413,10 @@ const ProfileScreen = () => {
                                 e.target.value
                               )
                             }
-                            className="text-lg font-semibold border-b border-gray-300"
+                            className="text-lg font-semibold border-b border-gray-300 bg-primary text-white"
                           />
                         ) : (
-                          <p className="text-lg font-semibold">
+                          <p className="text-lg font-semibold text-white">
                             {clinic.clinicCity}
                           </p>
                         )}
@@ -388,7 +429,7 @@ const ProfileScreen = () => {
                         className="text-primary w-6 h-6"
                       />
                       <div>
-                        <p className="text-gray-600">Clinic Area</p>
+                        <p className="text-white">Clinic Area</p>
                         {isEditing ? (
                           <input
                             type="text"
@@ -399,10 +440,10 @@ const ProfileScreen = () => {
                                 e.target.value
                               )
                             }
-                            className="text-lg font-semibold border-b border-gray-300"
+                            className="text-lg font-semibold border-b border-gray-300 bg-primary text-white"
                           />
                         ) : (
-                          <p className="text-lg font-semibold">
+                          <p className="text-lg font-semibold text-white">
                             {clinic.clinicArea}
                           </p>
                         )}
@@ -415,7 +456,7 @@ const ProfileScreen = () => {
                         className="text-primary w-6 h-6"
                       />
                       <div>
-                        <p className="text-gray-600">Clinic Address</p>
+                        <p className="text-white">Clinic Address</p>
                         {isEditing ? (
                           <input
                             type="text"
@@ -426,10 +467,10 @@ const ProfileScreen = () => {
                                 e.target.value
                               )
                             }
-                            className="text-lg font-semibold border-b border-gray-300"
+                            className="text-lg font-semibold border-b border-gray-300 bg-primary text-white"
                           />
                         ) : (
-                          <p className="text-lg font-semibold">
+                          <p className="text-lg font-semibold text-white">
                             {clinic.clinicAddress}
                           </p>
                         )}
@@ -442,22 +483,22 @@ const ProfileScreen = () => {
                         className="text-primary w-6 h-6"
                       />
                       <div>
-                        <p className="text-gray-600">Clinic Phone</p>
+                        <p className="text-white">Clinic Phone</p>
                         {isEditing ? (
                           <input
                             type="text"
-                            value={clinic.clinicPhone[0]}
+                            value={clinic.clinicPhone?.[0] || ""}
                             onChange={(e) =>
                               updateProp(
                                 `clinic.${index}.clinicPhone.0`,
                                 e.target.value
                               )
                             }
-                            className="text-lg font-semibold border-b border-gray-300"
+                            className="text-lg font-semibold border-b border-gray-300 bg-primary text-white"
                           />
                         ) : (
-                          <p className="text-lg font-semibold">
-                            {clinic.clinicPhone[0]}
+                          <p className="text-lg font-semibold text-white">
+                            {clinic.clinicPhone?.[0] || "N/A"}
                           </p>
                         )}
                       </div>
@@ -469,22 +510,22 @@ const ProfileScreen = () => {
                         className="text-primary w-6 h-6"
                       />
                       <div>
-                        <p className="text-gray-600">Clinic Opening Hours</p>
+                        <p className="text-white">Clinic Opening Hours</p>
                         {isEditing ? (
                           <input
                             type="text"
-                            value={clinic.clinicOpeningHours[0]}
+                            value={clinic.clinicOpeningHours?.[0] || ""}
                             onChange={(e) =>
                               updateProp(
                                 `clinic.${index}.clinicOpeningHours.0`,
                                 e.target.value
                               )
                             }
-                            className="text-lg font-semibold border-b border-gray-300"
+                            className="text-lg font-semibold border-b border-gray-300 bg-primary text-white"
                           />
                         ) : (
-                          <p className="text-lg font-semibold">
-                            {clinic.clinicOpeningHours[0]}
+                          <p className="text-lg font-semibold text-white">
+                            {clinic.clinicOpeningHours?.[0] || "N/A"}
                           </p>
                         )}
                       </div>
@@ -496,23 +537,56 @@ const ProfileScreen = () => {
                         className="text-primary w-6 h-6"
                       />
                       <div>
-                        <p className="text-gray-600">Clinic Work Days</p>
+                        <p className="text-white">Clinic Work Days</p>
                         {isEditing ? (
-                          <input
-                            type="text"
-                            value={clinic.clinicWorkDays[0]}
-                            onChange={(e) =>
-                              updateProp(
-                                `clinic.${index}.clinicWorkDays.0`,
-                                e.target.value
-                              )
-                            }
-                            className="text-lg font-semibold border-b border-gray-300"
-                          />
+                          <div>
+                            {clinic.clinicWorkDays?.map((workDay, dayIndex) => (
+                              <div key={dayIndex} className="mb-2 ">
+                                <input
+                                  type="text"
+                                  value={workDay.day || ""}
+                                  onChange={(e) =>
+                                    updateProp(
+                                      `clinic.${index}.clinicWorkDays.${dayIndex}.day`,
+                                      e.target.value
+                                    )
+                                  }
+                                  className="text-lg font-semibold border-b border-gray-300 mr-2 bg-primary text-white"
+                                />
+                                <span className="text-sm text-white">
+                                  {workDay.workingHours?.map((hours, i) => (
+                                    <span key={i}>
+                                      {hours.start} - {hours.end}
+                                      {i < workDay.workingHours.length - 1
+                                        ? ", "
+                                        : ""}
+                                    </span>
+                                  ))}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
                         ) : (
-                          <p className="text-lg font-semibold">
-                            {clinic.clinicWorkDays[0]}
-                          </p>
+                          <div>
+                            {clinic.clinicWorkDays?.map((workDay, dayIndex) => (
+                              <p
+                                key={dayIndex}
+                                className="text-lg font-semibold text-white"
+                              >
+                                {workDay.day}:{" "}
+                                <span className="text-sm text-gray-500">
+                                  {workDay.workingHours?.map((hours, i) => (
+                                    <span key={i}>
+                                      {hours.start} - {hours.end}
+                                      {i < workDay.workingHours.length - 1
+                                        ? ", "
+                                        : ""}
+                                    </span>
+                                  ))}
+                                </span>
+                              </p>
+                            ))}
+                          </div>
                         )}
                       </div>
                     </div>
@@ -523,7 +597,7 @@ const ProfileScreen = () => {
                         className="text-primary w-6 h-6"
                       />
                       <div>
-                        <p className="text-gray-600">Clinic Location Links</p>
+                        <p className="text-white">Clinic Location Links</p>
                         {isEditing ? (
                           <input
                             type="text"
@@ -534,10 +608,10 @@ const ProfileScreen = () => {
                                 e.target.value
                               )
                             }
-                            className="text-lg font-semibold border-b border-gray-300"
+                            className="text-lg font-semibold border-b border-gray-300 bg-primary text-white"
                           />
                         ) : (
-                          <p className="text-lg font-semibold">
+                          <p className="text-lg font-semibold text-white">
                             {clinic.clinicLocationLinks}
                           </p>
                         )}
