@@ -5,19 +5,36 @@ import AppInput from "../../components/AppInput1";
 import AppButton from "../../components/AppButton";
 import { verifyLink } from "../../api/services/AccessServices";
 import Cookies from "js-cookie";
+import { DOCTOR_INFO } from "../../helpers/constants/StaticKeys";
 
 const AccessScreen = () => {
   const { token } = useParams();
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [doctorEmail, setDoctorEmail] = useState("");
   const navigate = useNavigate();
   const { state, updateProp } = Logic();
+
+  // Get doctor email from local storage
+  useEffect(() => {
+    const doctorData = localStorage.getItem(DOCTOR_INFO);
+    if (doctorData && doctorData.trim().startsWith("{")) {
+      try {
+        const doctor = JSON.parse(doctorData);
+        setDoctorEmail(doctor.doctorEmail);
+      } catch (error) {
+        console.error("Error parsing doctor data:", error);
+        setDoctorEmail("bimar.med24@gmail.com"); // Fallback to default email
+        // Show error toast or message if needed
+      }
+    }
+  }, []);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     verifyLink(
       {
-        doctorEmail: "saramagdyy77@gmail.com",
+        doctorEmail: doctorEmail, // Use the dynamic doctor email
         password,
       },
       (res) => {

@@ -42,7 +42,7 @@ const Routers = () => {
       ),
     },
     {
-      path: "/access",
+      path: "/access/",
       element: (
         <ProtectedRoute>
           <Layout>

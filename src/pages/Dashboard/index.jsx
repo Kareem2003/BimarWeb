@@ -412,16 +412,12 @@ const DashboardScreen = () => {
     setDisplayCount(prev => prev + 5);
   };
 
-  const handleRowClick = (patient) => {
-    const doctorData = JSON.parse(localStorage.getItem("DOCTOR_INFO"));
-    navigate('/medicalRecords', { 
-      state: { 
-        patientId: patient._id,
-        patientName: patient.userName,
-        patientEmail: patient.userEmail,
-        doctorEmail: doctorData.doctorEmail 
-      } 
-    });
+  const handleRowClick = (patientData) => {
+    if (patientData && patientData.patientId && patientData.patientId.userEmail) {
+      navigate('/medicalRecords', { 
+        state: { patientEmail: patientData.patientId.userEmail }
+      });
+    }
   };
 
   return (
@@ -686,6 +682,7 @@ const DashboardScreen = () => {
                                         {...row.getRowProps()}
                                         className="hover:bg-gray-50 transition-colors cursor-pointer"
                                         key={rowIndex}
+                                        onClick={() => handleRowClick(row.original)}
                                       >
                                         {row.cells.map((cell, cellIndex) => {
                                           const isActionsColumn = cellIndex === row.cells.length - 1;
