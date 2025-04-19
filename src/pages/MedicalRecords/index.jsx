@@ -6,16 +6,41 @@ import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import Toast from "../../components/Toast";
 import { v4 as uuidv4 } from 'uuid';
-import { generateLink , createPrescription} from "../../api/services/requestServices";
+import { generateLink, createPrescription } from "../../api/services/requestServices";
 import Cookies from "js-cookie";
+import { DOCTOR_INFO } from "../../helpers/constants/StaticKeys";
 
 const MedicalRecordsScreen = () => {
   const { state, updateProp } = Logic();
   const [showAccessPopup, setShowAccessPopup] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '', type: '' });
   const [showFollowUpQuestion, setShowFollowUpQuestion] = useState(true);
+  const [doctorEmail, setDoctorEmail] = useState('');
+  const [doctorName, setDoctorName] = useState('');
+  const [doctorPhone, setDoctorPhone] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Get doctor information from local storage
+  useEffect(() => {
+    const doctorData = localStorage.getItem(DOCTOR_INFO);
+    if (doctorData && doctorData.trim().startsWith("{")) {
+      try {
+        const doctor = JSON.parse(doctorData);
+        setDoctorEmail(doctor.doctorEmail);
+        setDoctorName(doctor.doctorName);
+        setDoctorPhone(doctor.doctorPhone || "123-456-7890"); // Fallback if phone is not available
+      } catch (error) {
+        console.error("Error parsing doctor data:", error);
+        setDoctorEmail("bimar.med24@gmail.com"); // Fallback to default email
+        setToast({
+          show: true,
+          message: "Error setting doctor email. Using default email instead.",
+          type: "warning"
+        });
+      }
+    }
+  }, []);
 
   // Handle data loading after successful verification
   useEffect(() => {
@@ -34,13 +59,17 @@ const MedicalRecordsScreen = () => {
         console.error('Error parsing medical data:', err);
       }
     }
+    if (location.state && location.state.patientEmail) {
+      console.log('Patient Email from Dashboard:', location.state.patientEmail);
+      updateProp('patientEmail', location.state.patientEmail);
+    }
   }, [location.state]);
 
   const handleRequestAccess = async () => {
     generateLink(
       {
         patientEmail: state.patientEmail,
-        doctorEmail: "saramagdyy77@gmail.com",
+        doctorEmail: doctorEmail,
         accessDuration: parseInt(state.accessDuration),
       },
       (res)=>{
@@ -56,24 +85,38 @@ const MedicalRecordsScreen = () => {
       (err)=>{  
           setToast({
           show: true,
-          message: error.response?.data?.message || "Failed to request access. Please try again.",
+          message: err.response?.data?.message || "Failed to request access. Please try again.",
           type: "error"
         });
-        console.error('Request access error:', error);
+        console.error('Request access error:', err);
         setShowAccessPopup(false);
   },   () => {})
   };
 
 
     const calculateAge = (birthdate) => {
-    const birthDate = new Date(birthdate);
+    // Handle date in DD/MM/YYYY format
+    let birthDate;
+    
+    // Check if the date is in DD/MM/YYYY format
+    if (typeof birthdate === 'string' && birthdate.includes('/')) {
+      const [day, month, year] = birthdate.split('/').map(num => parseInt(num, 10));
+      birthDate = new Date(year, month - 1, day); // month is 0-indexed in JavaScript Date
+    } else {
+      // Fallback to regular Date parsing for other formats
+      birthDate = new Date(birthdate);
+    }
+    
     const today = new Date();
     let age = today.getFullYear() - birthDate.getFullYear();
     const monthDifference = today.getMonth() - birthDate.getMonth();
+    
     if (monthDifference < 0 || (monthDifference === 0 && today.getDate() < birthDate.getDate())) {
       age--;
     }
-    return age;
+    
+    // Sanity check to ensure we don't return an invalid age
+    return (age >= 0 && age < 120) ? age : 0;
   };
   
 
@@ -89,9 +132,6 @@ const MedicalRecordsScreen = () => {
   };
   
   const submitData = async () => {
-    const doctorName = "sara Magdy"; // Replace with actual logic to get the doctor's name from the cookie
-    const doctorPhone = "123-456-7890"; // Replace with actual logic to get the doctor's phone from the cookie
-  
     const prescriptionData = {
       prescriptionId: uuidv4(),
       prescriptionDate: new Date(),
@@ -130,7 +170,7 @@ const MedicalRecordsScreen = () => {
           message: "Failed to submit data. Please try again.",
           type: "error"
         });
-        console.error('Request access error:', error);
+        console.error('Request access error:', err);
         setShowAccessPopup(false);
   },   () => {})
   };
@@ -161,13 +201,9 @@ const MedicalRecordsScreen = () => {
         <div className="space-y-4">
           <div>
             <label className="text-[18.1px] font-medium mb-2 block">Patient Email</label>
-            <input 
-              type="email" 
-              className="w-full p-2 border rounded" 
-              placeholder="Enter patient email"
-              value={state.patientEmail}
-              onChange={(e) => updateProp('patientEmail', e.target.value)}
-            />
+            <div className="w-full p-2 border rounded bg-gray-50">
+              {state.patientEmail || "No email provided"}
+            </div>
           </div>
           <div>
             <label className="text-[18.1px] font-medium mb-2 block">Access Duration (minutes)</label>
@@ -201,7 +237,7 @@ const MedicalRecordsScreen = () => {
 
 
   return (
-    <Layout hideNavigation>
+    <>
       <div className="container mx-auto">
         {/* Main Content */}
         <div className="p-6 bg-white">
@@ -491,7 +527,7 @@ const MedicalRecordsScreen = () => {
           onClose={() => setToast({ show: false, message: '', type: '' })}
         />
       )}
-    </Layout>
+    </>
   );
 };
 
