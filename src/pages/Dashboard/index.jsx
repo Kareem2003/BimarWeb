@@ -684,15 +684,24 @@ const DashboardScreen = () => {
                                         key={rowIndex}
                                         onClick={() => handleRowClick(row.original)}
                                       >
-                                        {row.cells.map((cell, cellIndex) => (
-                                          <td
-                                            {...cell.getCellProps()}
-                                            className="px-6 py-4 whitespace-nowrap"
-                                            key={cellIndex}
-                                          >
-                                            {cell.render("Cell")}
-                                          </td>
-                                        ))}
+                                        {row.cells.map((cell, cellIndex) => {
+                                          const isActionsColumn = cellIndex === row.cells.length - 1;
+                                          
+                                          return (
+                                            <td
+                                              {...cell.getCellProps()}
+                                              className={`px-6 py-4 whitespace-nowrap ${!isActionsColumn ? 'cursor-pointer' : ''}`}
+                                              key={cellIndex}
+                                              onClick={() => {
+                                                if (!isActionsColumn) {
+                                                  handleRowClick(row.original.patientId);
+                                                }
+                                              }}
+                                            >
+                                              {cell.render("Cell")}
+                                            </td>
+                                          );
+                                        })}
                                       </tr>
                                     );
                                   })}
