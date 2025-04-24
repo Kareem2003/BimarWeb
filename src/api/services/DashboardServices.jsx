@@ -45,3 +45,46 @@ export const deleteAppointment = (appointmentId, onSuccess, onError, onFinally) 
       onFinally();
     });
 };
+
+
+export const getTodayIncome = (payload, onSuccess,onError,onFinally) =>{
+  $axios
+    .get(`/analytics/daily`)
+    .then((response) => {
+      onSuccess(response);
+    })
+    .catch((error) => {
+      onError(error);
+    })
+    .finally(() => {
+      onFinally();
+    });
+};
+
+export const getMonthlyIncome = (payload, onSuccess,onError,onFinally) =>{
+  $axios
+    .get(`/analytics/monthly`)
+    .then((response) => {
+      onSuccess(response);
+    })
+    .catch((error) => {
+      onError(error);
+    })
+    .finally(() => {
+      onFinally();
+    });
+};
+
+export const getYearlyIncome = (payload, onSuccess,onError,onFinally) =>{
+  $axios
+    .get(`/analytics/yearly`)
+    .then((response) => {
+      onSuccess(response);
+    })
+    .catch((error) => {
+      onError(error);
+    })
+    .finally(() => {
+      onFinally();
+    });
+};

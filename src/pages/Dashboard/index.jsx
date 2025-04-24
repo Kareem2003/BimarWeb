@@ -88,7 +88,7 @@ const DashboardScreen = () => {
           },
           {
             id: "patients",
-            title: "Total Patients Last Month",
+            title: "Total Patients This Month",
             value: "10",
             icon: <FaUserInjured className="text-green-500 text-2xl" />,
           },
@@ -101,11 +101,7 @@ const DashboardScreen = () => {
             id: "monthly-income",
             type: "chart",
             title: "Monthly Income",
-            data: [
-              { month: "Jan", income: 4000 },
-              { month: "Feb", income: 3000 },
-              { month: "Mar", income: 5000 },
-            ],
+            data: [],
           },
           {
             id: "notifications",
@@ -145,6 +141,58 @@ const DashboardScreen = () => {
 
     localStorage.setItem(DASHBOARD_SECTIONS, JSON.stringify(sectionsToSave));
   }, [mainSections]);
+
+  useEffect(() => {
+    // Update the income value in mainSections when todayIncome changes
+    if (mainSections.length > 0) {
+      const updatedSections = [...mainSections];
+      const statsSection = updatedSections.find(section => section.id === "stats");
+      
+      if (statsSection && statsSection.subsections) {
+        const incomeSubsection = statsSection.subsections.find(sub => sub.id === "income");
+        
+        if (incomeSubsection) {
+          // Format the income value with $ sign
+          incomeSubsection.value = `$${state.todayIncome || 0}`;
+          setMainSections(updatedSections);
+        }
+      }
+    }
+  }, [state.todayIncome]);
+
+  useEffect(() => {
+    // Update the total patients value in mainSections when totalPatientsThisMonth changes
+    if (mainSections.length > 0) {
+      const updatedSections = [...mainSections];
+      const statsSection = updatedSections.find(section => section.id === "stats");
+      
+      if (statsSection && statsSection.subsections) {
+        const patientsSubsection = statsSection.subsections.find(sub => sub.id === "patients");
+        
+        if (patientsSubsection) {
+          // Set the value directly from the state
+          patientsSubsection.value = state.totalPatientsThisMonth?.toString() || "0";
+          setMainSections(updatedSections);
+        }
+      }
+    }
+  }, [state.totalPatientsThisMonth]);
+
+  useEffect(() => {
+    if (mainSections.length > 0) {
+      const updatedSections = [...mainSections];
+      const chartsSection = updatedSections.find(section => section.id === "charts");
+      
+      if (chartsSection && chartsSection.subsections) {
+        const monthlyIncomeSubsection = chartsSection.subsections.find(sub => sub.id === "monthly-income");
+        
+        if (monthlyIncomeSubsection && state.yearlyStats) {
+          monthlyIncomeSubsection.data = state.yearlyStats;
+          setMainSections(updatedSections);
+        }
+      }
+    }
+  }, [state.yearlyStats]);
 
   const columns = useMemo(
     () => [
@@ -680,9 +728,8 @@ const DashboardScreen = () => {
                                     return (
                                       <tr
                                         {...row.getRowProps()}
-                                        className="hover:bg-gray-50 transition-colors cursor-pointer"
+                                        className="hover:bg-gray-50 transition-colors"
                                         key={rowIndex}
-                                        onClick={() => handleRowClick(row.original)}
                                       >
                                         {row.cells.map((cell, cellIndex) => {
                                           const isActionsColumn = cellIndex === row.cells.length - 1;
@@ -692,9 +739,12 @@ const DashboardScreen = () => {
                                               {...cell.getCellProps()}
                                               className={`px-6 py-4 whitespace-nowrap ${!isActionsColumn ? 'cursor-pointer' : ''}`}
                                               key={cellIndex}
-                                              onClick={() => {
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                
+                                                // Only navigate if this is NOT the actions column
                                                 if (!isActionsColumn) {
-                                                  handleRowClick(row.original.patientId);
+                                                  handleRowClick(row.original);
                                                 }
                                               }}
                                             >
