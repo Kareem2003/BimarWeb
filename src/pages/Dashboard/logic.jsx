@@ -2,7 +2,14 @@ import { reducer } from "../../reducers/reducer";
 import { useReducer, useEffect, useState } from "react";
 import { INITIAL_STATE } from "./constant";
 import ACTION_TYPES from "../../reducers/actionTypes";
-import { fetchAppointments, cancelAppointment, deleteAppointment } from "../../api/services/DashboardServices";
+import {
+  fetchAppointments,
+  cancelAppointment, 
+  deleteAppointment, 
+  getTodayIncome, 
+  getMonthlyIncome,
+  getYearlyIncome
+} from "../../api/services/DashboardServices";
 
 const Logic = () => {
   const [state, dispatch] = useReducer(reducer, INITIAL_STATE);
@@ -44,6 +51,70 @@ const Logic = () => {
       console.error("Exception in updateAppointments:", error);
       setError("Failed to update appointments");
       setLoading(false);
+    }
+  };
+
+  const updateTodayIncome = async () => {
+    try {
+      getTodayIncome(
+        {},
+        (res) => {
+          console.log("Today's income response:", res);
+          updateProp("todayIncome", res.totalMoney || 0);
+        },
+        (err) => {
+          console.error("Error fetching today's income:", err);
+          updateProp("todayIncome", 0);
+        },
+        () => {}
+      );
+    } catch (error) {
+      console.error("Exception in updateTodayIncome:", error);
+      updateProp("todayIncome", 0);
+    }
+  };
+
+  const updateMonthlyStats = async () => {
+    try {
+      getMonthlyIncome(
+        {},
+        (res) => {
+          console.log("Monthly stats response:", res);
+          updateProp("totalPatientsThisMonth", res.totalPatients || 0);
+        },
+        (err) => {
+          console.error("Error fetching monthly stats:", err);
+          updateProp("totalPatientsThisMonth", 0);
+        },
+        () => {}
+      );
+    } catch (error) {
+      console.error("Exception in updateMonthlyStats:", error);
+      updateProp("totalPatientsThisMonth", 0);
+    }
+  };
+
+  const updateYearlyStats = async () => {
+    try {
+      getYearlyIncome(
+        {},
+        (res) => {
+          console.log("Yearly stats response:", res);
+          const chartData = res.map(item => ({
+            month: new Date(2024, item.month - 1).toLocaleString('default', { month: 'short' }),
+            income: item.totalMoney
+          }));
+          updateProp("yearlyStats", chartData);
+        },
+        (err) => {
+          console.error("Error fetching yearly stats:", err);
+          updateProp("yearlyStats", []);
+        },
+        () => {}
+      );
+    } catch (error) {
+      console.error("Exception in updateYearlyStats:", error);
+      updateProp("yearlyStats", []);
     }
   };
 
@@ -108,6 +179,9 @@ const Logic = () => {
 
     getDashboardData();
     updateAppointments();
+    updateTodayIncome();
+    updateMonthlyStats();
+    updateYearlyStats();
   }, []);
 
   return {
@@ -118,7 +192,10 @@ const Logic = () => {
     updateProp,
     handleCancelAppointment,
     handleDeleteAppointment,
-    updateAppointments
+    updateAppointments,
+    updateTodayIncome,
+    updateMonthlyStats,
+    updateYearlyStats
   };
 };
 
