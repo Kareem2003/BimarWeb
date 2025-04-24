@@ -860,7 +860,7 @@ const RegisterScreen = () => {
             {currentStep === 5 && (
               <AppButton
                 title="Register"
-                type="submit" // Explicitly set type to "submit"
+                type="submit"
                 className={`bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg transition duration-300 ${
                   isRegistering ? "opacity-50 cursor-not-allowed" : ""
                 }`}

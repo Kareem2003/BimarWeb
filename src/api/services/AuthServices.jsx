@@ -56,7 +56,7 @@ export const verifyOTP = (payload, onSuccess, onError, onFinally) => {
   $axios
     .post(`/doctor/verify-otp`, {
       doctorEmail: payload.email,
-      otp: payload.otp
+      otp: payload.otp,
     })
     .then((response) => {
       onSuccess(response);
@@ -73,7 +73,7 @@ export const doctorResetPassword = (payload, onSuccess, onError, onFinally) => {
   $axios
     .post(`/doctor/reset-password`, {
       email: payload.email,
-      newPassword: payload.newPassword
+      newPassword: payload.newPassword,
     })
     .then((response) => {
       onSuccess(response);
@@ -90,7 +90,7 @@ export const ProfileScreen = (payload, onSuccess, onError, onFinally) => {
   $axios
     .post(`/doctor/profile`, {
       email: payload.email,
-      newPassword: payload.newPassword
+      newPassword: payload.newPassword,
     })
     .then((response) => {
       onSuccess(response);

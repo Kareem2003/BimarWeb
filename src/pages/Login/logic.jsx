@@ -36,22 +36,33 @@ const Logic = () => {
 
   const handleLogin = () => {
     if (!validateInputs()) return;
+
     doctorLogin(
       {
         doctorEmail: state.doctorEmail,
         doctorPassword: state.doctorPassword,
       },
       (res) => {
-        console.log("document.cookie: ", res);
+        console.log("Login response:", res);
         const token = document.cookie
           .split("; ")
           .find((row) => row.startsWith("jwt="));
+
         if (token) {
           const authToken = token.split("=")[1];
           localStorage.setItem(AUTHENTICATION_TOKEN, authToken);
-          localStorage.setItem(DOCTOR_INFO, JSON.stringify(res.doctor));
-          navigate("/");
-          ToastManager.notify("Login successful!", { type: "success" });
+
+          // Check if user is admin
+          // In your login handler
+          if (res.user && res.user.isAdmin) {
+            localStorage.setItem("ADMIN_INFO", JSON.stringify(res.user));
+            localStorage.removeItem(DOCTOR_INFO); // Remove any doctor info if exists
+            navigate("/admin");
+          } else {
+            localStorage.setItem(DOCTOR_INFO, JSON.stringify(res.doctor));
+            localStorage.removeItem("ADMIN_INFO"); // Remove any admin info if exists
+            navigate("/dashboard");
+          }
         } else {
           console.error("No authentication token received.");
           ToastManager.notify("Login failed. Please check your credentials.", {
@@ -61,11 +72,11 @@ const Logic = () => {
       },
       (err) => {
         console.log("err", err);
-        // Handle specific error cases
-        const errorMessage = err.response?.data?.message || "Invalid email or password";
+        const errorMessage =
+          err.response?.data?.message || "Invalid email or password";
         ToastManager.notify(errorMessage, {
           type: "error",
-          duration: 3000
+          duration: 3000,
         });
       },
       () => {}

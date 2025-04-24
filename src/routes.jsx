@@ -12,6 +12,11 @@ import DashboardScreen from "./pages/Dashboard";
 import AccessScreen from "./pages/Access";
 import MedicalRecordsScreen from "./pages/MedicalRecords";
 import ResetPasswordScreen from './pages/ResetPassword';
+import AdminDashboard from './pages/admin';
+import BookingsList from './pages/admin/components/BookingsList';
+import DoctorRequests from './pages/admin/components/DoctorRequests';
+import DoctorsList from './pages/admin/components/DoctorsList';
+import PatientsList from './pages/admin/components/PatientsList';
 
 const Routers = () => {
   return useRoutes([
@@ -20,7 +25,6 @@ const Routers = () => {
     { path: "/forget-password", element: <ForgetPasswordScreen /> },
     { path: "/otp", element: <OTPScreen /> },
     { path: "/reset-password", element: <ResetPasswordScreen /> },
-    // Move profile route out of children and make it a separate protected route
     {
       path: "/profile",
       element: (
@@ -52,15 +56,39 @@ const Routers = () => {
       ),
     },
     {
-      path: "/",
+      path: "/dashboard",
       element: (
-        <ProtectedRoute>
+        <ProtectedRoute requireAdmin={false}>
           <Layout>
             <DashboardScreen />
           </Layout>
         </ProtectedRoute>
       ),
-    }
+    },
+    {
+      path: "/",
+      element: (
+        <ProtectedRoute requireAdmin={false}>
+          <Layout>
+            <DashboardScreen />
+          </Layout>
+        </ProtectedRoute>
+      ),
+    },
+    { 
+      path: "/admin", 
+      element: (
+        <ProtectedRoute requireAdmin={true}>
+            <AdminDashboard />
+        </ProtectedRoute>
+      ),
+      children: [
+        { path: "bookings", element: <BookingsList /> },
+        { path: "doctors", element: <DoctorsList /> },
+        { path: "patients", element: <PatientsList /> },
+        { path: "requests", element: <DoctorRequests /> },
+      ]
+    },
   ]);
 };
 
