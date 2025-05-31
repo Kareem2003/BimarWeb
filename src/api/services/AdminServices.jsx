@@ -53,27 +53,39 @@ export const fetchAdminBookings = (onSuccess, onError, onFinally) => {
 
 export const fetchDoctorRequests = (onSuccess, onError, onFinally) => {
   $axios
-    .get('/doctor-requests')
+    .get('/admin/doctors?status=pending')
     .then((response) => {
-      onSuccess(response);
+      const requestsData = Array.isArray(response.data) 
+        ? response.data 
+        : response.data.data 
+          ? response.data.data 
+          : [response.data];
+          
+      const pendingDoctors = requestsData.filter(doctor => doctor.status === 'pending');
+      console.log('Doctor requests:', pendingDoctors);
+      onSuccess(pendingDoctors);
     })
     .catch((error) => {
-      onError(error);
+      console.error('Error fetching doctor requests:', error);
+      onError(error?.response?.data?.message || 'Failed to fetch requests');
     })
     .finally(() => {
       onFinally();
     });
 };
 
-// Add doctor request actions
 export const approveDoctorRequest = (doctorId, onSuccess, onError, onFinally) => {
   $axios
-    .patch(`/doctor-requests/${doctorId}/approve`)
+    .put(`/admin/doctor/activate/${doctorId}`, { 
+      newStatus: 'active' 
+    })
     .then((response) => {
-      onSuccess(response);
+      console.log('Doctor approved:', response.data);
+      onSuccess(response.data);
     })
     .catch((error) => {
-      onError(error);
+      console.error('Error approving doctor:', error);
+      onError(error?.response?.data?.message || 'Failed to approve doctor');
     })
     .finally(() => {
       onFinally();
@@ -82,12 +94,16 @@ export const approveDoctorRequest = (doctorId, onSuccess, onError, onFinally) =>
 
 export const rejectDoctorRequest = (doctorId, onSuccess, onError, onFinally) => {
   $axios
-    .patch(`/doctor-requests/${doctorId}/reject`)
+    .put(`/admin/doctor/reject/${doctorId}`, { 
+      newStatus: 'rejected' 
+    })
     .then((response) => {
-      onSuccess(response);
+      console.log('Doctor rejected:', response.data);
+      onSuccess(response.data);
     })
     .catch((error) => {
-      onError(error);
+      console.error('Error rejecting doctor:', error);
+      onError(error?.response?.data?.message || 'Failed to reject doctor');
     })
     .finally(() => {
       onFinally();

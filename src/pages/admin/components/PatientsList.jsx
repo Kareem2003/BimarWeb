@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { fetchPatients } from "../../../api/services/AdminServices";
-import { FaWeight, FaRulerVertical, FaChevronDown, FaChevronUp } from "react-icons/fa";
+import { FaWeight, FaRulerVertical, FaChevronDown, FaChevronUp, FaUserInjured } from "react-icons/fa";
 
 export const PatientsList = () => {
   const [patients, setPatients] = useState([]);
@@ -123,14 +123,18 @@ export const PatientsList = () => {
                       <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center mr-3">
                         {patient.profileImage ? (
                           <img
-                            src={patient.profileImage}
+                            src={`http://localhost:3000/${patient.profileImage?.replace(/\\/g, '/')}`}
                             alt={patient.userName}
                             className="w-full h-full rounded-full object-cover"
+                            onError={(e) => {
+                              e.target.onerror = null; // Prevent infinite loop
+                              e.target.src = ''; // Clear the source
+                              // Show the fallback icon
+                              e.target.parentElement.innerHTML = '<div class="text-primary text-xl"><svg>...</svg></div>';
+                            }}
                           />
                         ) : (
-                          <span className="text-primary text-sm font-bold">
-                            {patient.userName.charAt(0)}
-                          </span>
+                          <FaUserInjured className="text-primary text-xl" />
                         )}
                       </div>
                       <div>

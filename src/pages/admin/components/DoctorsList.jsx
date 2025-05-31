@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { fetchDoctors } from '../../../api/services/AdminServices';
-import { FaChevronDown, FaChevronUp, FaUserMd } from 'react-icons/fa';
+import { FaChevronDown, FaChevronUp, FaUserMd, FaFileAlt } from 'react-icons/fa';
 
 export const DoctorsList = () => {
   const [doctors, setDoctors] = useState([]);
@@ -59,6 +59,18 @@ export const DoctorsList = () => {
     );
   }
 
+  const DocumentLink = ({ icon: Icon, label, href }) => (
+    <a
+      href={`http://localhost:3000/${href?.replace(/\\/g, '/')}`}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="flex items-center p-2 bg-white rounded hover:bg-gray-100 transition-colors"
+    >
+      <Icon className="text-primary w-5 h-5 mr-2" />
+      <span className="text-primary text-sm hover:underline">{label}</span>
+    </a>
+  );
+
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
@@ -106,9 +118,15 @@ export const DoctorsList = () => {
                       <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center mr-3">
                         {doctor.doctorImage ? (
                           <img
-                            src={doctor.doctorImage}
+                            src={`http://localhost:3000/${doctor.doctorImage?.replace(/\\/g, '/')}`}
                             alt={doctor.doctorName}
                             className="w-full h-full rounded-full object-cover"
+                            onError={(e) => {
+                              e.target.onerror = null; // Prevent infinite loop
+                              e.target.src = ''; // Clear the source
+                              // Show the fallback icon by triggering the false condition
+                              e.target.parentElement.innerHTML = '<svg class="text-primary text-xl">...</svg>';
+                            }}
                           />
                         ) : (
                           <FaUserMd className="text-primary text-xl" />
@@ -146,21 +164,25 @@ export const DoctorsList = () => {
                           </div>
                         </div>
                         <div>
+                          <h4 className="text-sm font-medium text-gray-900">Documents</h4>
+                          <div className="space-y-2 mt-2">
+                            <DocumentLink icon={FaFileAlt} label="Doctor Image" href={doctor.doctorImage} />
+                            <DocumentLink icon={FaFileAlt} label="Syndicate Card" href={doctor.syndicateCard} />
+                            {doctor.certificates?.map((cert, index) => (
+                              <DocumentLink key={index} icon={FaFileAlt} label={`Certificate ${index + 1}`} href={cert} />
+                            ))}
+                          </div>
+                        </div>
+                        <div>
                           <h4 className="text-sm font-medium text-gray-900">Clinic Information</h4>
                           {doctor.clinic?.map((clinic, index) => (
                             <div key={index} className="mt-2">
                               <p className="text-sm text-gray-600">{clinic.clinicCity}, {clinic.clinicArea}</p>
                               <p className="text-sm text-gray-600">{clinic.clinicAddress}</p>
-                              <p className="text-sm text-gray-600">Phone: {clinic.clinicPhone?.[0]}</p>
+                              <p className="text-sm text-gray-600">Phone: {clinic.clinicPhone?.[0]?.replace(/[\[\]"]/g, '')}</p>
+                              <DocumentLink icon={FaFileAlt} label="Clinic License" href={clinic.clinicLicense} />
                             </div>
                           ))}
-                        </div>
-                        <div>
-                          <h4 className="text-sm font-medium text-gray-900">Ratings</h4>
-                          <div className="mt-2">
-                            <p className="text-sm text-gray-600">Average: {doctor.ratings?.averageRating || 0}</p>
-                            <p className="text-sm text-gray-600">Total Reviews: {doctor.ratings?.totalRatings || 0}</p>
-                          </div>
                         </div>
                       </div>
                     </td>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import * as AdminServices from "../../api/services/AdminServices";
 export const useLogout = () => {
@@ -78,13 +78,24 @@ export const useFetchDoctorRequests = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
+  const fetchRequests = useCallback(() => {
+    setLoading(true);
     AdminServices.fetchDoctorRequests(
-      (response) => setRequests(response),
-      (error) => setError(error.message),
+      (response) => {
+        setRequests(response);
+        setError(null);
+      },
+      (error) => {
+        setError(error);
+        setRequests([]);
+      },
       () => setLoading(false)
     );
   }, []);
 
-  return { requests, loading, error };
+  useEffect(() => {
+    fetchRequests();
+  }, [fetchRequests]);
+
+  return { requests, loading, error, refetch: fetchRequests };
 };
