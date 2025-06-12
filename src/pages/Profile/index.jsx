@@ -35,7 +35,7 @@ const ProfileScreen = () => {
           <div className="flex items-center gap-8">
             <div className="w-32 h-32 rounded-full shadow-lg overflow-hidden">
               <img
-                src={state.doctorImage}
+                src={`http://localhost:3000/${state.doctorImage}`}
                 onError={(e) => (e.target.src = DoctorImage)}
                 alt="Profile"
                 className="w-full h-full object-cover"
@@ -292,7 +292,7 @@ const ProfileScreen = () => {
                     />
                   ) : (
                     <a
-                      href={state.syndicateCard}
+                      href={`http://localhost:3000/${state.syndicateCard}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-lg font-semibold text-tertiary hover:text-primary-dark underline"
@@ -325,7 +325,7 @@ const ProfileScreen = () => {
                         state.certificates.map((cert, idx) => (
                           <a
                             key={idx}
-                            href={cert}
+                            href={`http://localhost:3000/${cert}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-lg font-semibold text-tertiary hover:text-primary-dark underline block"
@@ -335,7 +335,7 @@ const ProfileScreen = () => {
                         ))
                       ) : (
                         <a
-                          href={state.certificates}
+                          href={`http://localhost:3000/${state.certificates}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-lg font-semibold text-tertiary hover:text-primary-dark underline"
@@ -385,7 +385,7 @@ const ProfileScreen = () => {
                           />
                         ) : (
                           <a
-                            href={clinic.clinicLicense}
+                            href={`http://localhost:3000/${clinic.clinicLicense}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-lg font-semibold text-tertiary hover:text-primary-dark underline"

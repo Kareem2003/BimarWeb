@@ -55,14 +55,14 @@ const LoginScreen = () => {
             <div className="mt-5 text-center">
               <a
                 href="/forget-password"
-                className="text-white hover:text-tertiary"
+                className="text-white hover:text-test"
               >
                 Forgot Password?
               </a>
               <p className="mt-16 text-white">
                 Do not have an account?
                 <a href="/register" className="text-white">
-                  <span className="text-center text-base font-bold uppercase italic text-tertiary hover:text-white">
+                  <span className="text-center text-base font-bold uppercase italic text-test hover:text-white">
                     Register
                   </span>
                 </a>

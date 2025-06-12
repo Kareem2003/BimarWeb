@@ -9,7 +9,7 @@ const AuthTitles = ({ text, descriptionText, titleClass }) => {
         {text}
       </h1>
       {descriptionText && (
-        <div className="text-tertiary text-2xl mt-5 px-5 text-center">
+        <div className="text-test text-2xl mt-5 px-5 text-center">
           {descriptionText}
         </div>
       )}

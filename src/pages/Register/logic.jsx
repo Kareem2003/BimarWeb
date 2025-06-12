@@ -118,6 +118,7 @@ const Logic = () => {
 
     // Append clinic data
     state.clinic.forEach((clinic, clinicIndex) => {
+      formData.append(`clinic[${clinicIndex}][clinicName]`, clinic.clinicName);
       formData.append(
         `clinic[${clinicIndex}][clinicLicense]`,
         clinic.clinicLicense
@@ -195,7 +196,7 @@ const Logic = () => {
       () => {}
     );
   };
-  return { state, updateProp, handleRegister };
+  return { state, updateProp, handleRegister ,validateInputs };
 };
 
 export default Logic;

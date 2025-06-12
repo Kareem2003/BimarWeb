@@ -23,6 +23,7 @@ import AppInput from "../../components/AppInput1.jsx";
 import { DASHBOARD_SECTIONS } from "../../helpers/constants/StaticKeys";
 import Logic from "./logic";
 import { useNavigate } from "react-router-dom";
+import { DOCTOR_INFO } from "../../helpers/constants/StaticKeys";
 
 const getIconComponent = (id) => {
   switch (id) {
@@ -37,7 +38,11 @@ const getIconComponent = (id) => {
   }
 };
 
+
+
 const DashboardScreen = () => {
+   const doctorData = localStorage.getItem(DOCTOR_INFO);
+   const doctor = JSON.parse(doctorData);
   const { 
     state, 
     error, 
@@ -51,7 +56,6 @@ const DashboardScreen = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [displayCount, setDisplayCount] = useState(5);
   const navigate = useNavigate();
-  
   const [mainSections, setMainSections] = useState(() => {
     // Try to get saved order from localStorage
     const savedSections = localStorage.getItem(DASHBOARD_SECTIONS);
@@ -203,7 +207,7 @@ const DashboardScreen = () => {
           <div className="flex items-center">
             {row.original.patientId.profileImage ? (
               <img
-                src={row.original.patientId.profileImage}
+                src={`http://localhost:3000/${row.original.patientId.profileImage}`}
                 alt="Profile"
                 className="w-8 h-8 rounded-full"
               />
@@ -492,7 +496,8 @@ const DashboardScreen = () => {
       )}
       
       <h1 className="text-3xl font-bold text-gray-800 mb-2">Dashboard</h1>
-      <h2 className="text-xl text-gray-600 mb-6">Welcome, Kareem</h2>
+      <h2 className="text-xl text-gray-600 mb-6">Welcome, {"DR."+doctor.doctorName}</h2>
+
 
       <DragDropContext onDragEnd={onDragEnd}>
         <Droppable

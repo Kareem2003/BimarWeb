@@ -45,7 +45,7 @@ const ForgetPasswordScreen = () => {
               <p className="mt-16 text-white">
                 Remembered your password?{" "}
                 <a href="/login" className="text-white">
-                  <span className="text-center text-base font-bold uppercase italic text-tertiary hover:text-white">
+                  <span className="text-center text-base font-bold uppercase italic text-test hover:text-white">
                     Login
                   </span>
                 </a>

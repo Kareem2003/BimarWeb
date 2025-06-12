@@ -8,9 +8,10 @@ import AppSelect from "../../components/AppSelect";
 import DoctorImage from "../../assets/doctor-standing-with-his-arms-crossed-with-copy-space.jpg";
 import TimePicker from "react-time-picker";
 import "react-time-picker/dist/TimePicker.css";
+import { ToastManager } from "../../helpers/ToastManager";
 
 const RegisterScreen = () => {
-  const { state, updateProp, handleRegister } = Logic();
+  const { state, updateProp, handleRegister ,validateInputs} = Logic();
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 5;
   const [isRegistering, setIsRegistering] = useState(false);
@@ -21,7 +22,7 @@ const RegisterScreen = () => {
     updatedClinics[clinicIndex].clinicWorkDays.push({
       day: "",
       workingHours: [{ start: "", end: "" }],
-      examinationDuration: 0,
+      // examinationDuration: 0,
       NoBookings: 0,
     });
     updateProp("clinic", updatedClinics);
@@ -59,33 +60,75 @@ const RegisterScreen = () => {
     switch (step) {
       case 1:
         return (
-          // state.doctorName &&
-          // state.doctorPhone &&
+          state.doctorName &&
+          state.doctorPhone &&
           state.doctorEmail && state.doctorPassword
         );
       case 2:
-        return;
+        return(state.nationalID && state.Gender && state.doctorDateOfBirth);
       case 3:
-        return;
+        return(state.field && state.yearsOfExprience && state.syndicateID);
       case 4:
-        return;
+        return (
+          state.clinic?.length > 0 &&
+          state.clinic.every((clinic) => {
+            return (
+              clinic.clinicName?.trim() &&
+              clinic.clinicCity?.trim() &&
+              clinic.clinicArea?.trim() &&
+              clinic.clinicAddress?.trim() &&
+              clinic.clinicPhone?.length > 0 &&
+              clinic.clinicWorkDays?.length > 0 &&
+              clinic.clinicWorkDays.every(
+                (day) =>
+                  day.workingHours?.length > 0 &&
+                  day.NoBookings !== null &&
+                  day.NoBookings !== undefined
+              ) &&
+              clinic.clinicLocationLinks?.trim() &&
+              clinic.price !== null &&
+              clinic.price !== undefined
+            );
+          })
+        );
       case 5:
-        return;
+        return(state.syndicateCard && state.doctorImage && state.certificates && state.clinic[0]?.clinicLicense?.trim());
 
       default:
         return false;
     }
   };
 
+const specialties = [
+  { value: "Allergist", label: "Allergist - أخصائي الحساسية" },
+  { value: "Cardiologist", label: "Cardiologist - أخصائي القلب" },
+  { value: "Dermatologist", label: "Dermatologist - أخصائي الجلدية" },
+  { value: "Endocrinologist", label: "Endocrinologist - أخصائي الغدد الصماء" },
+  { value: "Gastroenterologist", label: "Gastroenterologist - أخصائي الجهاز الهضمي" },
+  { value: "Gynecologist", label: "Gynecologist - أخصائي النساء والتوليد" },
+  { value: "Hepatologist", label: "Hepatologist - أخصائي الكبد" },
+  { value: "Internal Medicine", label: "Internal Medicine - الطب الباطني" },
+  { value: "Neurologist", label: "Neurologist - أخصائي الأعصاب" },
+  { value: "Otolaryngologist", label: "Otolaryngologist - أخصائي الأنف والأذن والحنجرة" },
+  { value: "Pediatrician", label: "Pediatrician - طبيب الأطفال" },
+  { value: "Phlebologist", label: "Phlebologist - أخصائي الأوردة" },
+  { value: "Pulmonologist", label: "Pulmonologist - أخصائي الرئة" },
+  { value: "Rheumatologist", label: "Rheumatologist - أخصائي الروماتيزم" },
+  { value: "Physical Medicine and Rehabilitation", label: "Physical Medicine and Rehabilitation - الطب الطبيعي وإعادة التأهيل" },
+  { value: "Dentistry", label: "Dentistry - طب الأسنان" },
+  { value: "Psychiatry", label: "Psychiatry - الطب النفسي" },
+  { value: "Plastic Surgery", label: "Plastic Surgery - الجراحة التجميلية" },
+];
+
+
   // Function to handle the "Next" button click
   const handleNextStep = () => {
     console.log(JSON.stringify(state));
-    setCurrentStep(currentStep + 1);
-    // if (validateStep(currentStep)) {
-    //
-    // } else {
-    //   alert("Please fill out all fields before proceeding.");
-    // }
+    if (validateStep(currentStep)) {
+        setCurrentStep(currentStep + 1);
+    } else {
+      ToastManager.notify("Please fill in all fields.", { type: "error" });
+    }
   };
 
   // Function to handle the "Previous" button click
@@ -105,7 +148,7 @@ const RegisterScreen = () => {
         {
           day: [],
           workingHours: [{ start: "", end: "" }],
-          examinationDuration: 0,
+          // examinationDuration: 0,
           NoBookings: 0,
         },
       ],
@@ -161,14 +204,14 @@ const RegisterScreen = () => {
                           currentStep > index + 1
                             ? ""
                             : currentStep === index + 1
-                            ? "bg-tertiary border-2 border-white"
-                            : "bg-secondary border-2 border-white/40"
+                            ? "bg-secondary border-2 border-white"
+                            : "bg-test border-2 border-white/40"
                         }`}
                       >
                         <span
                           className={`font-bold ${
                             currentStep > index + 1
-                              ? "text-primary bg-tertiary w-8 h-8 rounded-full"
+                              ? "text-primary bg-white w-8 h-8 rounded-full"
                               : currentStep === index + 1
                           }`}
                         >
@@ -180,7 +223,7 @@ const RegisterScreen = () => {
                         <motion.div
                           className={`h-1 w-12 transition-colors duration-300 ${
                             currentStep > index + 1
-                              ? "bg-tertiary"
+                              ? "bg-test"
                               : "bg-primary"
                           }`}
                           initial={{ width: 0 }}
@@ -223,7 +266,7 @@ const RegisterScreen = () => {
                   transition={{ duration: 0.3 }}
                   className="space-y-6"
                 >
-                  <h3 className="text-xl font-semibold border-b-2 border-tertiary text-white pb-2">
+                  <h3 className="text-xl font-semibold border-b-2 border-test text-white pb-2">
                     Personal Information
                   </h3>
                   <div className="space-y-4">
@@ -290,7 +333,7 @@ const RegisterScreen = () => {
                   transition={{ duration: 0.3 }}
                   className="space-y-6"
                 >
-                  <h3 className="text-xl font-semibold text-white border-b-2 border-tertiary pb-2">
+                  <h3 className="text-xl font-semibold text-white border-b-2 border-test pb-2">
                     Additional Personal Information
                   </h3>
                   <div className="space-y-4">
@@ -342,7 +385,7 @@ const RegisterScreen = () => {
                   transition={{ duration: 0.3 }}
                   className="space-y-6"
                 >
-                  <h3 className="text-xl font-semibold text-white border-b-2 border-tertiary pb-2">
+                  <h3 className="text-xl font-semibold text-white border-b-2 border-test pb-2">
                     Professional Information
                   </h3>
                   <div className="space-y-4">
@@ -350,11 +393,20 @@ const RegisterScreen = () => {
                       Field of Specialization{" "}
                       <span className="text-red-500">*</span>
                     </label>
-                    <AppInput
+                    {/* <AppInput
                       term={state.field}
                       onChangeText={(e) => updateProp("field", e.target.value)}
                       placeholder="Enter your field"
+                    /> */}
+                    <AppSelect
+                      selectedValue={state.field}
+                      onChange={(e) => updateProp("field", e.target.value)}
+                      options={specialties}
+                      placeholder="Select field"
                     />
+
+
+
                     <label className="block text-white">
                       Years of Experience{" "}
                       <span className="text-red-500">*</span>
@@ -392,7 +444,7 @@ const RegisterScreen = () => {
                   transition={{ duration: 0.3 }}
                   className="space-y-6"
                 >
-                  <h3 className="text-xl font-semibold text-white border-b-2 border-tertiary pb-2">
+                  <h3 className="text-xl font-semibold text-white border-b-2 border-test pb-2">
                     Clinic Information
                   </h3>
                   <div className="space-y-4">
@@ -402,7 +454,7 @@ const RegisterScreen = () => {
                         className="space-y-4 border p-4 rounded-lg"
                       >
                         <div className="flex justify-between items-center">
-                          <h4 className="text-lg font-semibold text-tertiary">
+                          <h4 className="text-lg font-semibold text-test">
                             Clinic {clinicIndex + 1}
                           </h4>
                           {state.clinic.length > 1 && (
@@ -418,6 +470,22 @@ const RegisterScreen = () => {
 
                         {/* Clinic Basic Information */}
                         <div className="space-y-4">
+                          
+                           <label className="block text-white">
+                            Clinic name <span className="text-red-500">*</span>
+                          </label>
+                          <AppInput
+                            term={clinic.clinicName}
+                            onChangeText={(e) =>
+                              updateClinicField(
+                                clinicIndex,
+                                "clinicName",
+                                e.target.value
+                              )
+                            }
+                            placeholder="Enter clinic name"
+                          />
+
                           <label className="block text-white">
                             Clinic City <span className="text-red-500">*</span>
                           </label>
@@ -512,7 +580,7 @@ const RegisterScreen = () => {
         
                           <label className="block text-white">
                             Clinic Website{" "}
-                            <span className="text-red-500">*</span>
+                            {/* <span className="text-red-500">*</span> */}
                           </label>
                           <AppInput
                             term={clinic.clinicWebsite}
@@ -545,7 +613,7 @@ const RegisterScreen = () => {
 
                         {/* Work Days Section */}
                         <div className="space-y-4">
-                          <h5 className="font-medium text-tertiary">
+                          <h5 className="font-medium text-test">
                             Working Days
                           </h5>
                           {clinic.clinicWorkDays.map(
@@ -555,7 +623,7 @@ const RegisterScreen = () => {
                                 className="space-y-4 border p-4 rounded-lg"
                               >
                                 <div className="flex justify-between items-center">
-                                  <h6 className="font-medium text-tertiary">
+                                  <h6 className="font-medium text-test">
                                     Day {workDayIndex + 1}
                                   </h6>
                                   {clinic.clinicWorkDays.length > 1 && (
@@ -606,7 +674,7 @@ const RegisterScreen = () => {
                                       >
                                         <TimePicker
                                           className={
-                                            "border-2 border-tertiary rounded-lg"
+                                            "border-2 border-test rounded-lg"
                                           }
                                           value={slot.start || ""}
                                           onChange={(time) => {
@@ -629,7 +697,7 @@ const RegisterScreen = () => {
                                         <span>to</span>
                                         <TimePicker
                                           className={
-                                            "border-2 border-tertiary rounded-lg"
+                                            "border-2 border-test rounded-lg"
                                           }
                                           value={slot.end || ""}
                                           onChange={(time) => {
@@ -686,16 +754,16 @@ const RegisterScreen = () => {
                                         updatedHours
                                       );
                                     }}
-                                    className="bg-tertiary text-black px-3 py-1 rounded text-sm"
+                                    className="bg-test text-black px-3 py-1 rounded text-sm"
                                   >
                                     Add Time Slot
                                   </button>
                                 </div>
 
-                                <label className="block text-white">
+                                {/* <label className="block text-white">
                                   Examination Duration (minutes)
-                                </label>
-                                <AppInput
+                                </label> */}
+                                {/* <AppInput
                                   term={workDay.examinationDuration}
                                   onChangeText={(e) =>
                                     updateWorkDay(
@@ -707,7 +775,7 @@ const RegisterScreen = () => {
                                   }
                                   type="number"
                                   placeholder="30"
-                                />
+                                /> */}
                                 {/* <AppInput
                                 type="number"
                                 value={workDay.examinationDuration}
@@ -746,7 +814,7 @@ const RegisterScreen = () => {
                           <button
                             type="button"
                             onClick={() => addWorkDay(clinicIndex)}
-                            className="bg-tertiary text-black px-3 py-1 rounded text-sm"
+                            className="bg-test text-black px-3 py-1 rounded text-sm"
                           >
                             Add Work Day
                           </button>
@@ -758,7 +826,7 @@ const RegisterScreen = () => {
                     <button
                       type="button"
                       onClick={addClinic}
-                      className="bg-tertiary text-black px-4 py-2 rounded-lg"
+                      className="bg-test text-black px-4 py-2 rounded-lg"
                     >
                       Add Clinic
                     </button>
@@ -777,7 +845,7 @@ const RegisterScreen = () => {
                   transition={{ duration: 0.3 }}
                   className="space-y-6"
                 >
-                  <h3 className="text-xl font-semibold text-white border-b-2 border-tertiary pb-2">
+                  <h3 className="text-xl font-semibold text-white border-b-2 border-test pb-2">
                     Upload Files
                   </h3>
                   <div className="space-y-4">
