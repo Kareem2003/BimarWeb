@@ -9,7 +9,13 @@ import {
   FaSearch,
   FaRegEdit,
   FaRegTrashAlt,
-  FaTimes
+  FaTimes,
+  FaExclamationTriangle,
+  FaCheck,
+  FaPlus,
+  FaCheckCircle,
+  FaRegCircle,
+
 } from "react-icons/fa";
 import {
   LineChart,
@@ -24,6 +30,7 @@ import { DASHBOARD_SECTIONS } from "../../helpers/constants/StaticKeys";
 import Logic from "./logic";
 import { useNavigate } from "react-router-dom";
 import { DOCTOR_INFO } from "../../helpers/constants/StaticKeys";
+import { getTodos, createTodos, updateTodos, deleteTodos } from "../../api/services/TodoServices";
 
 const getIconComponent = (id) => {
   switch (id) {
@@ -37,8 +44,6 @@ const getIconComponent = (id) => {
       return null;
   }
 };
-
-
 
 const DashboardScreen = () => {
    const doctorData = localStorage.getItem(DOCTOR_INFO);
@@ -110,7 +115,7 @@ const DashboardScreen = () => {
           {
             id: "notifications",
             type: "list",
-            title: "Notifications",
+            title: "To-Do List",
             items: [
               "You have 3 pending appointments.",
               "You have 3 pending appointments.",
@@ -128,6 +133,157 @@ const DashboardScreen = () => {
       },
     ];
   });
+
+  const [todos, setTodos] = useState([]);
+  const [newTodoText, setNewTodoText] = useState("");
+  const [newTodoDescription, setNewTodoDescription] = useState("");
+  const [isLoadingTodos, setIsLoadingTodos] = useState(false);
+  const [editingTodo, setEditingTodo] = useState(null);
+  const [showDeleteAlert, setShowDeleteAlert] = useState(false);
+  const [todoToDelete, setTodoToDelete] = useState(null);
+
+  useEffect(() => {
+    if (doctor && doctor._id) {
+      fetchTodos();
+    }
+  }, []);
+
+  const fetchTodos = () => {
+    if (!doctor || !doctor._id) return;
+    
+    setIsLoadingTodos(true);
+    getTodos(
+      { doctorId: doctor._id },
+      (response) => {
+        setTodos(response || []);
+        setIsLoadingTodos(false);
+      },
+      (error) => {
+        console.error("Error fetching todos:", error);
+        setIsLoadingTodos(false);
+      },
+      () => setIsLoadingTodos(false)
+    );
+  };
+
+  
+
+  const handleAddTodo = () => {
+    if (!newTodoText.trim()) return;
+
+    createTodos(
+      {
+        doctorId: doctor._id,
+        title: newTodoText,
+        description: newTodoDescription
+      },
+      (response) => {
+        setTodos([...todos, response]);
+        setNewTodoText("");
+        setNewTodoDescription("");
+      },
+      (error) => {
+        console.error("Error creating todo:", error);
+      },
+      () => {}
+    );
+  };
+
+  const handleToggleTodo = (todo) => {
+    updateTodos(
+      {
+        doctorId: doctor._id,
+        todoId: todo._id,
+        title: todo.title,
+        description: todo.description,
+        completed: !todo.completed
+      },
+      (response) => {
+        setTodos(todos.map(t => 
+          t._id === todo._id ? { ...t, completed: !t.completed } : t
+        ));
+      },
+      (error) => {
+        console.error("Error updating todo:", error);
+      },
+      () => {}
+    );
+  };
+
+  const handleDeleteTodo = (todoId) => {
+    if (!window.confirm("Are you sure you want to delete this task?")) return;
+
+    deleteTodos(
+      {
+        doctorId: doctor._id,
+        todoId
+      },
+      (response) => {
+        setTodos(todos.filter(t => t._id !== todoId));
+      },
+      (error) => {
+        console.error("Error deleting todo:", error);
+      },
+      () => {}
+    );
+  };
+
+  const handleEditTodo = (todo) => {
+    setEditingTodo(todo);
+    setNewTodoText(todo.title);
+    setNewTodoDescription(todo.description || "");
+  };
+
+  const handleUpdateTodo = () => {
+    if (!editingTodo || !newTodoText.trim()) return;
+
+    updateTodos(
+      {
+        doctorId: doctor._id,
+        todoId: editingTodo._id,
+        title: newTodoText,
+        description: newTodoDescription,
+        completed: editingTodo.completed
+      },
+      (response) => {
+        setTodos(todos.map(t => 
+          t._id === editingTodo._id ? response : t
+        ));
+        setEditingTodo(null);
+        setNewTodoText("");
+        setNewTodoDescription("");
+      },
+      (error) => {
+        console.error("Error updating todo:", error);
+      },
+      () => {}
+    );
+  };
+
+  const handleDeleteClick = (todo) => {
+    setTodoToDelete(todo);
+    setShowDeleteAlert(true);
+  };
+
+  const confirmDelete = () => {
+    if (!todoToDelete) return;
+
+    deleteTodos(
+      {
+        doctorId: doctor._id,
+        todoId: todoToDelete._id
+      },
+      (response) => {
+        setTodos(todos.filter(t => t._id !== todoToDelete._id));
+        setShowDeleteAlert(false);
+        setTodoToDelete(null);
+      },
+      (error) => {
+        console.error("Error deleting todo:", error);
+      },
+      () => {}
+    );
+  };
 
   useEffect(() => {
     const sectionsToSave = mainSections.map((section) => {
@@ -616,31 +772,117 @@ const DashboardScreen = () => {
                                                 {subsection.title}
                                               </h3>
                                             </div>
-                                            <ul className="space-y-3 max-h-60 overflow-y-auto">
-                                              {subsection.items.map(
-                                                (item, i) => (
-                                                  <li
-                                                    key={i}
-                                                    className="flex items-center p-3 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow"
-                                                  >
-                                                    <div className="h-2 w-2 bg-blue-500 rounded-full mr-3" />
-                                                    <span className="text-textColor flex-grow">
-                                                      {item}
-                                                    </span>
-                                                    <button
-                                                      className="text-red-500 hover:text-red-700"
-                                                      onClick={() =>
-                                                        handleRemoveNotification(
-                                                          i
-                                                        )
-                                                      }
-                                                    >
-                                                      <FaRegTrashAlt className="w-4 h-4 text-textColor hover:text-red" />
-                                                    </button>
-                                                  </li>
-                                                )
-                                              )}
-                                            </ul>
+                                            <div className="space-y-4 p-4 bg-[#E9EFEC] rounded-lg">
+  {/* Input Card */}
+  <div className="bg-white rounded-md border border-[#C4DAD2] p-4 space-y-3 shadow-sm">
+    <input
+      type="text"
+      value={newTodoText}
+      onChange={(e) => setNewTodoText(e.target.value)}
+      onKeyDown={(e) =>
+        e.key === "Enter" &&
+        (editingTodo ? handleUpdateTodo() : handleAddTodo())
+      }
+      placeholder="Add a new task..."
+      className="w-full px-4 py-2 rounded-md border border-[#C4DAD2] bg-white text-[#2E354C] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#6A9C89]"
+    />
+    <textarea
+      value={newTodoDescription}
+      onChange={(e) => setNewTodoDescription(e.target.value)}
+      placeholder="Add a description (optional)"
+      className="w-full px-4 py-2 rounded-md border border-[#C4DAD2] bg-white text-[#2E354C] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#6A9C89] resize-none"
+      rows={2}
+    />
+    <div className="flex justify-end">
+      <button
+        onClick={editingTodo ? handleUpdateTodo : handleAddTodo}
+        className="flex items-center gap-2 bg-[#16423C] text-white px-5 py-2 rounded-md hover:bg-[#6A9C89] transition"
+      >
+        {editingTodo ? (
+          <>
+            <FaCheck className="w-4 h-4" />
+            Update Task
+          </>
+        ) : (
+          <>
+            <FaPlus className="w-4 h-4" />
+            Add Task
+          </>
+        )}
+      </button>
+    </div>
+  </div>
+
+  {/* Task List */}
+  <div className="max-h-64 overflow-y-auto space-y-3 pr-1 scrollbar-thin scrollbar-thumb-[#C4DAD2] scrollbar-track-transparent">
+    {isLoadingTodos ? (
+      <div className="flex justify-center py-4">
+        <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-[#16423C]"></div>
+      </div>
+    ) : (
+      <ul className="space-y-2">
+        {todos.map((todo) => (
+          <li
+            key={todo._id}
+            className="flex justify-between items-start p-4 bg-white rounded-lg border border-[#C4DAD2] shadow-sm"
+          >
+            <div className="flex items-start gap-3">
+              <input
+                type="checkbox"
+                checked={todo.completed}
+                onChange={() => handleToggleTodo(todo)}
+                className="h-5 w-5 mt-1 accent-[#16423C] rounded-md"
+              />
+              <div>
+                <p
+                  className={`font-semibold ${
+                    todo.completed
+                      ? "line-through text-gray-400"
+                      : "text-[#2E354C]"
+                  }`}
+                >
+                  {todo.title}
+                </p>
+                {todo.description && (
+                  <p className="text-sm text-gray-500">{todo.description}</p>
+                )}
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => handleEditTodo(todo)}
+                className="text-[#16423C] hover:text-[#6A9C89]"
+                title="Edit task"
+              >
+                <FaRegEdit className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => handleDeleteClick(todo)}
+                className="text-[#FD9B63] hover:text-red-600"
+                title="Delete task"
+              >
+                <FaRegTrashAlt className="w-4 h-4" />
+              </button>
+            </div>
+          </li>
+        ))}
+        {todos.length === 0 && (
+          <li className="text-center py-4 text-gray-500 bg-white rounded-lg border border-[#C4DAD2]">
+            No tasks yet. Add one above!
+          </li>
+        )}
+      </ul>
+    )}
+  </div>
+</div>
+
+
+
+
+
+
+
+
                                           </div>
                                         ) : (
                                           <div>
@@ -808,6 +1050,51 @@ const DashboardScreen = () => {
           )}
         </Droppable>
       </DragDropContext>
+      {/* Custom Delete Alert */}
+      {showDeleteAlert && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-5 w-80 mx-4 shadow-2xl ">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2.5 bg-tertiary-100 rounded-full">
+                <FaExclamationTriangle className="w-5 h-5 text-tertiary" />
+              </div>
+              <h3 className="text-lg font-bold text-textColor">Delete Task</h3>
+              <button
+                onClick={() => {
+                  setShowDeleteAlert(false);
+                  setTodoToDelete(null);
+                }}
+                className="ml-auto text-red-500 hover:text-red-600 transition-colors duration-200"
+                aria-label="Close delete alert"
+              >
+              
+              </button>
+            </div>
+            <p className="text-textColor mb-6 text-base font-medium leading-relaxed">
+              Are you sure you want to <span className='text-red-600 font-semibold'>delete</span> <span className='font-semibold'>"{todoToDelete?.title}"</span>?<br />
+              <span className="text-gray-500 text-sm">This action cannot be undone.</span>
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  setShowDeleteAlert(false);
+                  setTodoToDelete(null);
+                }}
+                className="px-4 py-2 bg-secondary text-black rounded-lg hover:bg-red-700 transition-all duration-200 shadow-md hover:shadow-lg flex items-center gap-2 font-semibold"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-red-700 transition-all duration-200 shadow-md hover:shadow-lg flex items-center gap-2 font-semibold"
+              >
+                <FaRegTrashAlt className="w-4 h-4 text-tertiary" />
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

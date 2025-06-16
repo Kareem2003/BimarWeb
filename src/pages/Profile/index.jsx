@@ -17,13 +17,39 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { DOCTOR_INFO } from "../../helpers/constants/StaticKeys";
 import DoctorImage from "../../assets/WhatsApp Image 2023-07-23 at 15.23.54.jpg";
+import { ProfileScreen } from "../../api/services/ProfileScreen";
 
-const ProfileScreen = () => {
+const ProfileScreenComponent = () => {
   const { state, updateProp } = Logic();
   const [isEditing, setIsEditing] = useState(false);
 
   const handleEditToggle = () => {
-    setIsEditing(!isEditing);
+    if (isEditing) {
+      // Call the ProfileScreen service to update the doctor data
+      ProfileScreen(
+        { email: state.doctorEmail, newData: state },
+        (response) => {
+          console.log("Profile updated successfully:", response);
+          // Update local storage with new data
+          const currentDoctorData = JSON.parse(localStorage.getItem(DOCTOR_INFO) || '{}');
+          const updatedDoctorData = {
+            ...currentDoctorData,
+            doctorName: state.doctorName,
+            doctorDateOfBirth: state.doctorDateOfBirth,
+            doctorPhone: state.doctorPhone,
+            doctorEmail: state.doctorEmail
+          };
+          localStorage.setItem(DOCTOR_INFO, JSON.stringify(updatedDoctorData));
+          setIsEditing(false);
+        },
+        (error) => {
+          console.error("Error updating profile:", error);
+        },
+        () => {}
+      );
+    } else {
+      setIsEditing(!isEditing);
+    }
   };
 
   return (
@@ -504,7 +530,7 @@ const ProfileScreen = () => {
                       </div>
                     </div>
 
-                    <div className="flex items-center space-x-4">
+                    {/* <div className="flex items-center space-x-4">
                       <FontAwesomeIcon
                         icon={faClock}
                         className="text-primary w-6 h-6"
@@ -514,10 +540,10 @@ const ProfileScreen = () => {
                         {isEditing ? (
                           <input
                             type="text"
-                            value={clinic.clinicOpeningHours?.[0] || ""}
+                            value={clinic.clinicWorkDays[0].workingHours|| ""}
                             onChange={(e) =>
                               updateProp(
-                                `clinic.${index}.clinicOpeningHours.0`,
+                                `clinic.${index}.clinicWorkDays.0.workingHours`,
                                 e.target.value
                               )
                             }
@@ -525,11 +551,11 @@ const ProfileScreen = () => {
                           />
                         ) : (
                           <p className="text-lg font-semibold text-white">
-                            {clinic.clinicOpeningHours?.[0] || "N/A"}
+                              {clinic.clinicWorkDays[0].workingHours || "N/A"}
                           </p>
                         )}
                       </div>
-                    </div>
+                    </div> */}
 
                     <div className="flex items-center space-x-4">
                       <FontAwesomeIcon
@@ -554,14 +580,13 @@ const ProfileScreen = () => {
                                   className="text-lg font-semibold border-b border-gray-300 mr-2 bg-primary text-white"
                                 />
                                 <span className="text-sm text-white">
-                                  {workDay.workingHours?.map((hours, i) => (
-                                    <span key={i}>
-                                      {hours.start} - {hours.end}
-                                      {i < workDay.workingHours.length - 1
-                                        ? ", "
-                                        : ""}
-                                    </span>
-                                  ))}
+                                {workDay.workingHours?.map((hours, i) => (
+                                  <span key={i}>
+                                    {hours}
+                                    {i < workDay.workingHours.length - 1 ? ", " : ""}
+                                  </span>
+                                ))}
+
                                 </span>
                               </div>
                             ))}
@@ -575,14 +600,13 @@ const ProfileScreen = () => {
                               >
                                 {workDay.day}:{" "}
                                 <span className="text-sm text-gray-500">
-                                  {workDay.workingHours?.map((hours, i) => (
-                                    <span key={i}>
-                                      {hours.start} - {hours.end}
-                                      {i < workDay.workingHours.length - 1
-                                        ? ", "
-                                        : ""}
-                                    </span>
-                                  ))}
+                                {workDay.workingHours?.map((hours, i) => (
+                                  <span key={i}>
+                                    {hours}
+                                    {i < workDay.workingHours.length - 1 ? ", " : ""}
+                                  </span>
+                                ))}
+
                                 </span>
                               </p>
                             ))}
@@ -630,4 +654,4 @@ const ProfileScreen = () => {
   );
 };
 
-export default ProfileScreen;
+export default ProfileScreenComponent;
