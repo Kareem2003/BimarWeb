@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Logic from "./logic";
-import { FaUser, FaLock } from "react-icons/fa";
+import { FaUser, FaLock, FaNotesMedical, FaHistory, FaUserFriends, FaUsers } from "react-icons/fa";
 import Layout from "../../components/Layout";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
@@ -13,6 +13,12 @@ import {
 import Cookies from "js-cookie";
 import { DOCTOR_INFO } from "../../helpers/constants/StaticKeys";
 
+const SECTIONS = [
+  { id: "patient-overview", label: "Patient Overview", icon: FaUser },
+  { id: "medical-family-history", label: "Medical & Family History", icon: FaNotesMedical },
+  { id: "diagnosis-history", label: "Diagnosis History", icon: FaHistory },
+];
+
 const MedicalRecordsScreen = () => {
   const { state, updateProp } = Logic();
   const [showAccessPopup, setShowAccessPopup] = useState(false);
@@ -24,6 +30,9 @@ const MedicalRecordsScreen = () => {
   const [doctorPhone, setDoctorPhone] = useState("");
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Track which section is active
+  const [activeSection, setActiveSection] = useState(SECTIONS[0].id);
 
   // Get doctor information from local storage
   useEffect(() => {
@@ -273,700 +282,485 @@ const MedicalRecordsScreen = () => {
 
   return (
     <>
-      <div className="container mx-auto">
+      <div className="flex min-h-screen bg-gradient-to-br from-background to-white">
+        {/* Sidebar */}
+        <aside className="w-64 h-screen bg-primary text-white flex flex-col sticky top-0 z-30 shadow-xl">
+          <div className="p-6 border-b border-secondary/30">
+            <h2 className="text-2xl font-bold tracking-wide">Medical Records</h2>
+          </div>
+          <nav className="flex-1 mt-4">
+            <ul className="space-y-2">
+              {SECTIONS.map((section) => (
+                <li key={section.id}>
+                  <button
+                    className={`flex items-center w-full px-6 py-3 text-base font-medium rounded-lg transition-all duration-200 focus:outline-none ${activeSection === section.id ? 'bg-tertiary text-white shadow-md' : 'hover:bg-secondary/20 hover:text-tertiary'}`}
+                    onClick={() => setActiveSection(section.id)}
+                  >
+                    <section.icon className="w-5 h-5 mr-3" />
+                    {section.label}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </nav>
+          <div className="p-6 text-sm text-secondary border-t border-secondary/30 mt-auto">
+            <p>© 2024 Bimar</p>
+          </div>
+        </aside>
+
         {/* Main Content */}
-        <div className="p-6 bg-white">
-          <div className="space-y-4">
-            {/* Top Section */}
-            <div className="flex gap-4">
+        <div className="flex-1 flex flex-col gap-8 p-8 bg-background/60 min-h-screen">
+          {/* Only show the active section */}
+          <div className="flex-1">
+            {activeSection === "patient-overview" && (
+              <section id="patient-overview">
+                {/* Patient Info + Overview side by side */}
+                <div className="flex flex-row gap-8 mb-8">
               {/* Patient Card */}
-              <div className="bg-[#E9EFEC] rounded-xl shadow-lg p-6 w-[500px] h-[211px]">
-                <div className="flex items-start space-x-4">
-                  <div className="w-[114px] h-[130px] rounded-[10px] bg-gray-200 flex items-center justify-center mt-2">
+                  <div className="bg-gradient-to-br from-white to-background/60 rounded-3xl shadow-xl p-10 flex-1 min-w-[350px] border-l-8 border-primary transition-transform hover:-translate-y-1 hover:shadow-2xl duration-200">
+                    <div className="flex items-center gap-4 mb-6">
+                      <FaUser className="text-3xl text-primary" />
+                      <h3 className="text-2xl font-extrabold tracking-wide">Patient Info</h3>
+                    </div>
+                    <div className="flex items-start gap-6">
+                      <div className="w-[114px] h-[130px] rounded-2xl bg-gray-200 flex items-center justify-center mt-2 shadow-inner overflow-hidden">
                     {state.medicalRecords?.profileImage ? (
                       <img
-                        src={`http://localhost:3000/${state.medicalRecords.profileImage.replace(
-                          /\\/g,
-                          "/"
-                        )}`}
+                            src={`http://localhost:3000/${state.medicalRecords.profileImage.replace(/\\/g, "/")}`}
                         alt="Profile"
-                        className="w-full h-full object-cover rounded-[10px]"
+                            className="w-full h-full object-cover rounded-2xl"
                         onError={(e) => {
                           e.target.onerror = null;
                           e.target.src = "";
-                        }} // Fallback to FaUser if image fails to load
+                            }}
                       />
                     ) : (
                       <FaUser className="text-4xl text-gray-400" />
                     )}
                   </div>
-
-                  <div className="flex-1">
-                    <h4 className="text-[18.1px] font-extrabold text-gray-800 mb-2">
+                      <div className="flex-1 space-y-2">
+                        <h4 className="text-xl font-bold text-gray-900 mb-1">
                       {state.medicalRecords?.userName || "N/A"}
                     </h4>
-                    <div className="space-y-1">
-                      <div className="flex justify-between">
-                        <span className="text-[18.1px] font-medium text-[#00000080]">
-                          {state.medicalRecords?.personalRecords?.Gender ||
-                            "N/A"}
-                        </span>
-                        <span className="text-[18.1px] font-medium text-[#00000080]">
-                          Age:{" "}
-                          {state.medicalRecords?.personalRecords?.DateOfBirth
-                            ? calculateAge(
-                                state.medicalRecords.personalRecords.DateOfBirth
-                              )
-                            : "N/A"}
-                        </span>
+                        <div className="flex flex-wrap gap-2 items-center mb-2">
+                          <span className="text-base font-medium text-[#00000080]">{state.medicalRecords?.personalRecords?.Gender || "N/A"}</span>
+                          <span className="px-3 py-1 rounded-full bg-primary/10 text-primary font-semibold text-sm ml-2">Age: {state.medicalRecords?.personalRecords?.DateOfBirth ? calculateAge(state.medicalRecords.personalRecords.DateOfBirth) : "N/A"}</span>
                       </div>
-                      <div className="text-[18.1px] font-normal text-black">
-                        Area:{" "}
-                        <span className="text-[#00000080]">
-                          {state.medicalRecords?.personalRecords?.Area || "N/A"}
-                        </span>
+                        <div className="grid grid-cols-2 gap-x-6 gap-y-1">
+                          <div className="text-base font-normal text-black">
+                            <span className="font-semibold">Area:</span> <span className="text-[#00000080]">{state.medicalRecords?.personalRecords?.Area || "N/A"}</span>
                       </div>
-                      <div className="text-[18.1px] font-normal text-black">
-                        City:{" "}
-                        <span className="text-[#00000080]">
-                          {state.medicalRecords?.personalRecords?.City || "N/A"}
-                        </span>
+                          <div className="text-base font-normal text-black">
+                            <span className="font-semibold">City:</span> <span className="text-[#00000080]">{state.medicalRecords?.personalRecords?.City || "N/A"}</span>
                       </div>
-                      <div className="text-[18.1px] font-normal text-black">
-                        Last Visit:{" "}
-                        <span className="text-[#00000080]">
-                          {state.medicalRecords?.lastVisit || "N/A"}
-                        </span>
+                          <div className="text-base font-normal text-black col-span-2">
+                            <span className="font-semibold">Last Visit:</span> <span className="text-[#00000080]">{state.medicalRecords?.lastVisit || "N/A"}</span>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
-
-              {/* Overview Section */}
-              <div className="bg-[#E9EFEC] rounded-xl shadow-lg p-6 flex-1">
-                <h3 className="text-[18.1px] font-extrabold mb-2">Overview</h3>
-                <div className="flex justify-between items-center">
-                  <p className="text-[18.1px] font-normal text-black">
-                    Weight:{" "}
-                    <span className="text-[#00000080]">
-                      {state.medicalRecords?.personalRecords?.userWeight ||
-                        "N/A"}{" "}
-                      kg
-                    </span>
-                  </p>
-                  <p className="text-[18.1px] font-normal text-black">
-                    Height:{" "}
-                    <span className="text-[#00000080]">
-                      {state.medicalRecords?.personalRecords?.userHeight ||
-                        "N/A"}{" "}
-                      cm
-                    </span>
-                  </p>
-                  <p className="text-[18.1px] font-normal text-black">
-                    Blood Type:{" "}
-                    <span className="text-[#00000080]">
-                      {state.medicalRecords?.medicalRecord?.bloodType || "N/A"}
-                    </span>
-                  </p>
-                  <p className="text-[18.1px] font-normal text-black">
-                    Status:{" "}
-                    <span className="text-[#00000080]">
-                      {state.medicalRecords?.personalRecords?.familyStatus ||
-                        "N/A"}
-                    </span>
-                  </p>
-                  <p className="text-[18.1px] font-normal text-black">
-                    Smoking:{" "}
-                    <span className="text-[#00000080]">
-                      {state.medicalRecords?.personalRecords?.smoking || "N/A"}
-                    </span>
-                  </p>
-                  <p className="text-[18.1px] font-normal text-black">
-                    Alcohol:{" "}
-                    <span className="text-[#00000080]">
-                      {state.medicalRecords?.personalRecords?.alcohol || "N/A"}
-                    </span>
-                  </p>
+                  {/* Overview Card */}
+                  <div className="bg-gradient-to-br from-white to-background/60 rounded-3xl shadow-xl p-10 flex-1 border-l-8 border-tertiary transition-transform hover:-translate-y-1 hover:shadow-2xl duration-200">
+                    <div className="flex items-center gap-4 mb-6">
+                      <FaUserFriends className="text-3xl text-tertiary" />
+                      <h3 className="text-2xl font-extrabold tracking-wide">Overview</h3>
+                    </div>
+                    <div className="flex flex-wrap gap-6 mb-2">
+                      <div className="text-base font-normal text-black flex items-center gap-2">
+                        <span className="font-semibold">Weight:</span>
+                        <span className="px-3 py-1 rounded-full bg-primary/10 text-primary font-semibold text-sm">{state.medicalRecords?.personalRecords?.userWeight || "N/A"} kg</span>
+                      </div>
+                      <div className="text-base font-normal text-black flex items-center gap-2">
+                        <span className="font-semibold">Height:</span>
+                        <span className="px-3 py-1 rounded-full bg-primary/10 text-primary font-semibold text-sm">{state.medicalRecords?.personalRecords?.userHeight || "N/A"} cm</span>
+                      </div>
+                      <div className="text-base font-normal text-black flex items-center gap-2">
+                        <span className="font-semibold">Blood Type:</span>
+                        <span className="px-3 py-1 rounded-full bg-tertiary/10 text-tertiary font-semibold text-sm">{state.medicalRecords?.medicalRecord?.bloodType || "N/A"}</span>
+                      </div>
+                      <div className="text-base font-normal text-black flex items-center gap-2">
+                        <span className="font-semibold">Status:</span>
+                        <span className="px-3 py-1 rounded-full bg-secondary/20 text-primary font-semibold text-sm">{state.medicalRecords?.personalRecords?.familyStatus || "N/A"}</span>
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-6 mb-2">
+                      <div className="text-base font-normal text-black flex items-center gap-2">
+                        <span className="font-semibold">Smoking:</span>
+                        <span className="px-3 py-1 rounded-full bg-green-100 text-green-800 font-semibold text-sm">{state.medicalRecords?.personalRecords?.smoking || "N/A"}</span>
+                      </div>
+                      <div className="text-base font-normal text-black flex items-center gap-2">
+                        <span className="font-semibold">Alcohol:</span>
+                        <span className="px-3 py-1 rounded-full bg-yellow-100 text-yellow-800 font-semibold text-sm">{state.medicalRecords?.personalRecords?.alcohol || "N/A"}</span>
+                      </div>
                 </div>
                 <div className="mt-4">
-                  <p className="mb-2 text-[18.1px] font-normal text-black">
-                    Known Allergies
-                  </p>
-                  <div className="flex gap-2">
+                      <p className="mb-2 text-base font-semibold text-black border-b border-secondary/30 pb-1">Known Allergies</p>
+                      <div className="flex gap-2 flex-wrap">
                     {state.medicalRecords?.medicalRecord?.allgeric?.map(
                       (allergy, index) => (
                         <span
                           key={index}
-                          className="bg-[#16423C] text-white px-7 py-1 rounded-full text-sm"
+                              className="bg-primary text-white px-6 py-1 rounded-full text-sm shadow hover:bg-tertiary transition cursor-pointer border border-primary/20"
                         >
                           {allergy}
                         </span>
                       )
                     ) || (
-                      <span className="text-[#00000080]">
-                        No data available
-                      </span>
+                          <span className="text-[#00000080]">No data available</span>
                     )}
                   </div>
                 </div>
               </div>
             </div>
-
-            {/* Medical Records Section */}
-            <div className="bg-[#E9EFEC] rounded-xl shadow-lg p-6 relative">
-              <div className={!state.hasAccess ? "filter blur-sm" : ""}>
-                <h3 className="text-[18.1px] font-extrabold mb-2">
-                  Medical Records
-                </h3>
-                <div className="grid grid-cols-4 divide-x divide-gray-300">
-                  {/* Chronic Medications */}
-                  <div className="px-6">
-                    <h4 className="text-[18.1px] font-medium mb-2">
-                      Chronic Medications:
-                    </h4>
-                    <ul className="space-y-1 text-[18.1px] text-[#0000000]">
-                      {state.medicalRecords?.medicalRecord?.chronicMedications?.map(
-                        (med, index) => <li key={index}>• {med}</li>
-                      ) || <li>• No data available</li>}
-                    </ul>
+                {/* Personal Records */}
+                <div className="bg-gradient-to-br from-white to-background/60 rounded-3xl shadow-xl p-10 border-l-8 border-secondary transition-transform hover:-translate-y-1 hover:shadow-2xl duration-200">
+                  <div className="flex items-center gap-4 mb-6">
+                    <FaUserFriends className="text-3xl text-secondary" />
+                    <h4 className="text-2xl font-extrabold tracking-wide">Personal Records</h4>
                   </div>
-
-                  {/* Surgeries */}
-                  <div className="px-6">
-                    <h4 className="text-[18.1px] font-medium mb-2">
-                      Surgeries:
-                    </h4>
-                    <ul className="space-y-1 text-[18.1px] text-[#0000000]">
-                      {state.medicalRecords?.medicalRecord?.surgeries?.map(
-                        (surgery, index) => <li key={index}>• {surgery}</li>
-                      ) || <li>• No data available</li>}
-                    </ul>
-                  </div>
-
-                  {/* Chronic Diseases */}
-                  <div className="px-6">
-                    <h4 className="text-[18.1px] font-medium mb-2">
-                      Chronic Diseases:
-                    </h4>
-                    <ul className="space-y-1 text-[18.1px] text-[#0000000]">
-                      {state.medicalRecords?.medicalRecord?.chronicDiseases?.map(
-                        (disease, index) => <li key={index}>• {disease}</li>
-                      ) || <li>• No data available</li>}
-                    </ul>
-                  </div>
-
-                  {/* Vaccinations */}
-                  <div className="px-6">
-                    <h4 className="text-[18.1px] font-medium mb-2">
-                      Vaccinations:
-                    </h4>
-                    <ul className="space-y-1 text-[18.1px] text-[#0000000]">
-                      {state.medicalRecords?.medicalRecord?.vaccinations?.map(
-                        (vaccine, index) => <li key={index}>• {vaccine}</li>
-                      ) || <li>• No data available</li>}
-                    </ul>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {/* Work Information */}
+                    <div className="bg-white/80 rounded-xl p-6 shadow border border-secondary/20">
+                      <h6 className="font-semibold text-lg mb-2 border-b border-secondary/20 pb-1">Work Information</h6>
+                      <div className="flex flex-col gap-2">
+                        <div><span className="font-semibold">Work Name:</span> {state.medicalRecords.personalRecords?.workName || 'N/A'}</div>
+                        <div><span className="font-semibold">Work Place:</span> {state.medicalRecords.personalRecords?.workPlace || 'N/A'}</div>
+                      </div>
+                    </div>
+                    {/* Family Information */}
+                    <div className="bg-white/80 rounded-xl p-6 shadow border border-secondary/20">
+                      <h6 className="font-semibold text-lg mb-2 border-b border-secondary/20 pb-1">Family Information</h6>
+                      <div className="flex flex-col gap-2">
+                        <div><span className="font-semibold">Number of Children:</span> {state.medicalRecords.personalRecords?.childrenNumber || 'N/A'}</div>
+                        <div><span className="font-semibold">First Child Birth Date:</span> {state.medicalRecords.personalRecords?.birthDateOfFirstChild || 'N/A'}</div>
+                        <div><span className="font-semibold">Number of Wives:</span> {state.medicalRecords.personalRecords?.wifesNumber || 'N/A'}</div>
+                      </div>
+                    </div>
+                    {/* Lifestyle Information */}
+                    <div className="bg-white/80 rounded-xl p-6 shadow border border-secondary/20 col-span-2">
+                      <h6 className="font-semibold text-lg mb-2 border-b border-secondary/20 pb-1">Lifestyle Information</h6>
+                      <div className="flex flex-wrap gap-6">
+                        <div><span className="font-semibold">Smoking Status:</span> <span className={`px-3 py-1 rounded-full text-sm ml-2 ${state.medicalRecords.personalRecords?.smoking === 'Yes' ? 'bg-red-100 text-red-800' : state.medicalRecords.personalRecords?.smoking === 'Former smoker' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}`}>{state.medicalRecords.personalRecords?.smoking || 'N/A'}</span></div>
+                        <div><span className="font-semibold">Alcohol Consumption:</span> <span className="px-3 py-1 rounded-full text-sm ml-2 bg-yellow-100 text-yellow-800">{state.medicalRecords.personalRecords?.alcohol || 'N/A'}</span></div>
+                        <div className="flex flex-col">
+                          <span className="font-semibold mb-1">Pets:</span>
+                          <div className="flex flex-wrap gap-2">
+                            {state.medicalRecords.personalRecords?.petsTypes && state.medicalRecords.personalRecords.petsTypes.length > 0 ? (
+                              state.medicalRecords.personalRecords.petsTypes.map((pet, index) => (
+                                <span key={index} className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm border border-blue-200 hover:bg-blue-100 cursor-pointer transition">{pet}</span>
+                              ))
+                            ) : (
+                              <span className="text-gray-500">No pets recorded</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
-
-                {/* Diagnosis Section */}
-                <div className="mt-6 mb-6">
-                  <h4 className="text-[18.1px] font-extrabold mb-4">
-                    Diagnosis History
-                  </h4>
-                  <div className="space-y-6">
-                    {state.medicalRecords?.Diagnosis &&
-                    state.medicalRecords.Diagnosis.length > 0 ? (
-                      state.medicalRecords.Diagnosis.map(
-                        (diagnosisEntry, index) => (
-                          <div
-                            key={index}
-                            className="bg-white rounded-lg p-6 shadow-sm"
-                          >
-                            {/* Main diagnosis content */}
-                            <div className="grid grid-cols-2 gap-6">
-                              <div>
-                                <h6 className="font-medium mb-2 text-[16px]">
-                                  Diagnosis
-                                </h6>
-                                <ul className="list-disc list-inside space-y-1">
-                                  {diagnosisEntry.diagnosis.map((item, i) => (
-                                    <li key={i} className="text-gray-700">
-                                      {item}
-                                    </li>
+              </section>
+            )}
+            {activeSection === "medical-family-history" && (
+              <section id="medical-family-history">
+                {/* Medical Records */}
+                <div className="bg-gradient-to-br from-white to-background/60 rounded-3xl shadow-xl p-10 mb-8 relative border-l-8 border-tertiary transition-transform hover:-translate-y-1 hover:shadow-2xl duration-200">
+                  <div className="flex items-center gap-4 mb-6">
+                    <FaNotesMedical className="text-3xl text-tertiary" />
+                    <h3 className="text-2xl font-extrabold tracking-wide">Medical Records</h3>
+                  </div>
+                  <div className={!state.hasAccess ? "filter blur-sm" : ""}>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                      {/* Chronic Medications */}
+                      <div className="bg-white/80 rounded-xl p-6 shadow border border-tertiary/20 flex flex-col items-start">
+                        <h4 className="text-lg font-semibold mb-2 border-b border-tertiary/20 pb-1">Chronic Medications</h4>
+                        <ul className="flex flex-wrap gap-2 mt-2">
+                          {state.medicalRecords?.medicalRecord?.chronicMedications?.length > 0 ? (
+                            state.medicalRecords.medicalRecord.chronicMedications.map((med, index) => (
+                              <li key={index} className="bg-tertiary/10 text-tertiary px-4 py-1 rounded-full text-sm font-medium border border-tertiary/20 hover:bg-tertiary/20 transition cursor-pointer">{med}</li>
+                            ))
+                          ) : (
+                            <li className="text-gray-400">No data available</li>
+                          )}
+                        </ul>
+                      </div>
+                      {/* Surgeries */}
+                      <div className="bg-white/80 rounded-xl p-6 shadow border border-tertiary/20 flex flex-col items-start">
+                        <h4 className="text-lg font-semibold mb-2 border-b border-tertiary/20 pb-1">Surgeries</h4>
+                        <ul className="flex flex-wrap gap-2 mt-2">
+                          {state.medicalRecords?.medicalRecord?.surgeries?.length > 0 ? (
+                            state.medicalRecords.medicalRecord.surgeries.map((surgery, index) => (
+                              <li key={index} className="bg-tertiary/10 text-tertiary px-4 py-1 rounded-full text-sm font-medium border border-tertiary/20 hover:bg-tertiary/20 transition cursor-pointer">{surgery}</li>
+                            ))
+                          ) : (
+                            <li className="text-gray-400">No data available</li>
+                          )}
+                        </ul>
+                      </div>
+                      {/* Chronic Diseases */}
+                      <div className="bg-white/80 rounded-xl p-6 shadow border border-tertiary/20 flex flex-col items-start">
+                        <h4 className="text-lg font-semibold mb-2 border-b border-tertiary/20 pb-1">Chronic Diseases</h4>
+                        <ul className="flex flex-wrap gap-2 mt-2">
+                          {state.medicalRecords?.medicalRecord?.chronicDiseases?.length > 0 ? (
+                            state.medicalRecords.medicalRecord.chronicDiseases.map((disease, index) => (
+                              <li key={index} className="bg-tertiary/10 text-tertiary px-4 py-1 rounded-full text-sm font-medium border border-tertiary/20 hover:bg-tertiary/20 transition cursor-pointer">{disease}</li>
+                            ))
+                          ) : (
+                            <li className="text-gray-400">No data available</li>
+                          )}
+                        </ul>
+                      </div>
+                      {/* Vaccinations */}
+                      <div className="bg-white/80 rounded-xl p-6 shadow border border-tertiary/20 flex flex-col items-start">
+                        <h4 className="text-lg font-semibold mb-2 border-b border-tertiary/20 pb-1">Vaccinations</h4>
+                        <ul className="flex flex-wrap gap-2 mt-2">
+                          {state.medicalRecords?.medicalRecord?.vaccinations?.length > 0 ? (
+                            state.medicalRecords.medicalRecord.vaccinations.map((vaccine, index) => (
+                              <li key={index} className="bg-tertiary/10 text-tertiary px-4 py-1 rounded-full text-sm font-medium border border-tertiary/20 hover:bg-tertiary/20 transition cursor-pointer">{vaccine}</li>
+                            ))
+                          ) : (
+                            <li className="text-gray-400">No data available</li>
+                          )}
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                  {/* Restore Get Access button overlay if !state.hasAccess */}
+                  {!state.hasAccess && (
+                    <div className="absolute inset-0 flex items-center justify-center z-20">
+                      <button
+                        onClick={() => setShowAccessPopup(true)}
+                        className="bg-[#16423C] text-white px-20 py-4 font-black rounded-lg text-[18.1px] flex items-center gap-2 shadow-lg"
+                      >
+                        <FaLock /> Get Access
+                      </button>
+                    </div>
+                  )}
+                </div>
+                {/* Family History */}
+                <div className="bg-gradient-to-br from-white to-background/60 rounded-3xl shadow-xl p-10 border-l-8 border-secondary transition-transform hover:-translate-y-1 hover:shadow-2xl duration-200">
+                  <div className="flex items-center gap-4 mb-6">
+                    <FaUsers className="text-3xl text-secondary" />
+                    <h4 className="text-2xl font-extrabold tracking-wide">Family History</h4>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {/* Genetic Diseases */}
+                    <div className="bg-white/80 rounded-xl p-6 shadow border border-secondary/20 flex flex-col items-start">
+                      <h5 className="text-lg font-semibold mb-2 border-b border-secondary/20 pb-1">Genetic Diseases</h5>
+                      <ul className="flex flex-wrap gap-2 mt-2">
+                        {state.medicalRecords?.medicalRecord?.familyHistory?.genaticsDiseases?.length > 0 ? (
+                          state.medicalRecords.medicalRecord.familyHistory.genaticsDiseases.map((disease, index) => (
+                            <li key={index} className="bg-secondary/20 text-primary px-4 py-1 rounded-full text-sm font-medium border border-secondary/30 hover:bg-secondary/40 transition cursor-pointer">{disease}</li>
+                          ))
+                        ) : (
+                          <li className="text-gray-400">No data available</li>
+                        )}
+                      </ul>
+                    </div>
+                    {/* Genetics */}
+                    <div className="bg-white/80 rounded-xl p-6 shadow border border-secondary/20 flex flex-col items-start">
+                      <h5 className="text-lg font-semibold mb-2 border-b border-secondary/20 pb-1">Genetics</h5>
+                      <ul className="flex flex-wrap gap-2 mt-2">
+                        {state.medicalRecords?.medicalRecord?.familyHistory?.genatics?.length > 0 ? (
+                          state.medicalRecords.medicalRecord.familyHistory.genatics.map((genatic, index) => (
+                            <li key={index} className="bg-secondary/20 text-primary px-4 py-1 rounded-full text-sm font-medium border border-secondary/30 hover:bg-secondary/40 transition cursor-pointer">{genatic}</li>
+                          ))
+                        ) : (
+                          <li className="text-gray-400">No data available</li>
+                        )}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </section>
+            )}
+            {activeSection === "diagnosis-history" && (
+              <section id="diagnosis-history">
+                <div className="bg-gradient-to-br from-white to-background/60 rounded-3xl shadow-xl p-10 border-l-8 border-primary transition-transform hover:-translate-y-1 hover:shadow-2xl duration-200">
+                  <div className="flex items-center gap-4 mb-6">
+                    <FaHistory className="text-3xl text-primary" />
+                    <h4 className="text-2xl font-extrabold tracking-wide">Diagnosis History</h4>
+                  </div>
+                  <div className="space-y-8">
+                    {state.medicalRecords?.Diagnosis && state.medicalRecords.Diagnosis.length > 0 ? (
+                      state.medicalRecords.Diagnosis.map((diagnosisEntry, index) => (
+                        <div key={index} className="bg-white/80 rounded-xl p-8 shadow border border-primary/20 hover:shadow-lg transition">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-4">
+                            <div>
+                              <h6 className="font-semibold mb-2 text-lg">Diagnosis</h6>
+                              <ul className="list-disc list-inside space-y-1 ml-4">
+                                {diagnosisEntry.diagnosis.map((item, i) => (
+                                  <li key={i} className="text-gray-700 font-medium">{item}</li>
+                                ))}
+                              </ul>
+                            </div>
+                            <div>
+                              <h6 className="font-semibold mb-2 text-lg">Lab Results</h6>
+                              {diagnosisEntry.labResults && diagnosisEntry.labResults.length > 0 ? (
+                                <div className="flex flex-wrap gap-2">
+                                  {diagnosisEntry.labResults.map((result, i) => (
+                                    <a
+                                      key={i}
+                                      href={`http://localhost:3000/${result}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="inline-flex items-center bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm hover:bg-blue-100 border border-blue-200 transition"
+                                    >
+                                      View Result {i + 1}
+                                    </a>
                                   ))}
-                                </ul>
-                              </div>
+                                </div>
+                              ) : (
+                                <p className="text-gray-500">No lab results available</p>
+                              )}
                             </div>
-
-                            {/* Lab Results and X-rays */}
-                            <div className="grid grid-cols-2 gap-6 mt-4">
-                              <div>
-                                <h6 className="font-medium mb-2 text-[16px]">
-                                  Lab Results
-                                </h6>
-                                {diagnosisEntry.labResults &&
-                                diagnosisEntry.labResults.length > 0 ? (
-                                  <div className="flex flex-wrap gap-2">
-                                    {diagnosisEntry.labResults.map(
-                                      (result, i) => (
-                                        <a
-                                          key={i}
-                                          href={`http://localhost:3000/${result}`}
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                          className="inline-flex items-center bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm hover:bg-blue-100"
-                                        >
-                                          View Result {i + 1}
-                                        </a>
-                                      )
-                                    )}
-                                  </div>
-                                ) : (
-                                  <p className="text-gray-500">
-                                    No lab results available
-                                  </p>
-                                )}
-                              </div>
-
-                              <div>
-                                <h6 className="font-medium mb-2 text-[16px]">
-                                  X-rays
-                                </h6>
-                                {diagnosisEntry.Xray &&
-                                diagnosisEntry.Xray.length > 0 ? (
-                                  <div className="flex flex-wrap gap-2">
-                                    {diagnosisEntry.Xray.map((xray, i) => (
-                                      <a
-                                        key={i}
-                                        href={`http://localhost:3000/${xray}`}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="inline-flex items-center bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm hover:bg-blue-100"
-                                      >
-                                        View X-ray {i + 1}
-                                      </a>
-                                    ))}
-                                  </div>
-                                ) : (
-                                  <p className="text-gray-500">
-                                    No X-rays available
-                                  </p>
-                                )}
-                              </div>
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-4">
+                            <div>
+                              <h6 className="font-semibold mb-2 text-lg">X-rays</h6>
+                              {diagnosisEntry.Xray && diagnosisEntry.Xray.length > 0 ? (
+                                <div className="flex flex-wrap gap-2">
+                                  {diagnosisEntry.Xray.map((xray, i) => (
+                                    <a
+                                      key={i}
+                                      href={`http://localhost:3000/${xray}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="inline-flex items-center bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm hover:bg-blue-100 border border-blue-200 transition"
+                                    >
+                                      View X-ray {i + 1}
+                                    </a>
+                                  ))}
+                                </div>
+                              ) : (
+                                <p className="text-gray-500">No X-rays available</p>
+                              )}
                             </div>
-
-                            {/* Prescription */}
                             {diagnosisEntry.prescription && (
-                              <div className="mt-4 pt-4 border-t">
-                                <h6 className="font-medium mb-3 text-[16px]">
-                                  Prescription
-                                </h6>
-                                <div className="bg-gray-50 p-4 rounded-lg">
+                              <div>
+                                <h6 className="font-semibold mb-2 text-lg">Prescription</h6>
+                                <div className="bg-gray-50 p-4 rounded-lg border border-primary/10">
                                   <div className="flex justify-between items-start mb-3">
                                     <div>
-                                      <p className="text-sm text-gray-500">
-                                        Date:{" "}
-                                        {new Date(
-                                          diagnosisEntry.prescription.prescriptionDate
-                                        ).toLocaleDateString()}
-                                      </p>
-                                      {diagnosisEntry.prescription
-                                        .followUpDate && (
-                                        <p className="text-sm text-gray-500">
-                                          Follow-up:{" "}
-                                          {new Date(
-                                            diagnosisEntry.prescription.followUpDate
-                                          ).toLocaleDateString()}
-                                        </p>
+                                      <p className="text-sm text-gray-500">Date: {new Date(diagnosisEntry.prescription.prescriptionDate).toLocaleDateString()}</p>
+                                      {diagnosisEntry.prescription.followUpDate && (
+                                        <p className="text-sm text-gray-500">Follow-up: {new Date(diagnosisEntry.prescription.followUpDate).toLocaleDateString()}</p>
                                       )}
                                     </div>
-                                    <span
-                                      className={`px-3 py-1 rounded-full text-sm ${
-                                        diagnosisEntry.prescription
-                                          .prescriptionStatus === "Issued"
-                                          ? "bg-green-100 text-green-800"
-                                          : diagnosisEntry.prescription
-                                              .prescriptionStatus === "Expired"
-                                          ? "bg-red-100 text-red-800"
-                                          : "bg-yellow-100 text-yellow-800"
-                                      }`}
-                                    >
-                                      {
-                                        diagnosisEntry.prescription
-                                          .prescriptionStatus
-                                      }
-                                    </span>
+                                    <span className={`px-3 py-1 rounded-full text-sm font-semibold ${diagnosisEntry.prescription.prescriptionStatus === "Issued" ? "bg-green-100 text-green-800" : diagnosisEntry.prescription.prescriptionStatus === "Expired" ? "bg-red-100 text-red-800" : "bg-yellow-100 text-yellow-800"}`}>{diagnosisEntry.prescription.prescriptionStatus}</span>
                                   </div>
                                   <div className="space-y-2">
-                                    {diagnosisEntry.prescription.prescriptionInstruction.map(
-                                      (instruction, i) => (
-                                        <div
-                                          key={i}
-                                          className="flex items-center gap-4 bg-white p-2 rounded"
-                                        >
-                                          <div className="flex-1">
-                                            {instruction.medication}
-                                          </div>
-                                          <div className="flex-1">
-                                            {instruction.dosage}
-                                          </div>
-                                          <div className="text-gray-600">
-                                            {instruction.frequency}x/day
-                                          </div>
-                                          <div className="text-gray-600">
-                                            {instruction.duration} weeks
-                                          </div>
-                                        </div>
-                                      )
-                                    )}
+                                    {diagnosisEntry.prescription.prescriptionInstruction.map((instruction, i) => (
+                                      <div key={i} className="flex items-center gap-4 bg-white p-2 rounded border border-primary/10">
+                                        <div className="flex-1 font-semibold">{instruction.medication}</div>
+                                        <div className="flex-1">{instruction.dosage}</div>
+                                        <div className="text-gray-600">{instruction.frequency}x/day</div>
+                                        <div className="text-gray-600">{instruction.duration} weeks</div>
+                                      </div>
+                                    ))}
                                   </div>
                                 </div>
                               </div>
                             )}
-
-                            {/* Consultations */}
-                            {diagnosisEntry.consultations &&
-                              diagnosisEntry.consultations.length > 0 && (
-                                <div className="mt-4 pt-4 border-t">
-                                  <h6 className="font-medium mb-3 text-[16px]">
-                                    Consultations
-                                  </h6>
-                                  <div className="space-y-2">
-                                    {diagnosisEntry.consultations.map(
-                                      (consultation, i) => (
-                                        <div
-                                          key={i}
-                                          className="bg-gray-50 p-4 rounded-lg"
-                                        >
-                                          <div className="flex justify-between items-start mb-2">
-                                            <p className="text-sm text-gray-500">
-                                              {new Date(
-                                                consultation.consultationDate
-                                              ).toLocaleDateString()}
-                                            </p>
-                                            <span
-                                              className={`px-3 py-1 rounded-full text-sm ${
-                                                consultation.consultationStatus ===
-                                                "Completed"
-                                                  ? "bg-green-100 text-green-800"
-                                                  : consultation.consultationStatus ===
-                                                    "Scheduled"
-                                                  ? "bg-blue-100 text-blue-800"
-                                                  : "bg-yellow-100 text-yellow-800"
-                                              }`}
-                                            >
-                                              {consultation.consultationStatus}
-                                            </span>
-                                          </div>
-                                          <p className="text-gray-700">
-                                            {
-                                              consultation.consultationDescription
-                                            }
-                                          </p>
-                                        </div>
-                                      )
-                                    )}
+                          </div>
+                          {/* Consultations */}
+                          {diagnosisEntry.consultations && diagnosisEntry.consultations.length > 0 && (
+                            <div className="mt-4 pt-4 border-t border-primary/10">
+                              <h6 className="font-semibold mb-3 text-lg">Consultations</h6>
+                              <div className="space-y-2">
+                                {diagnosisEntry.consultations.map((consultation, i) => (
+                                  <div key={i} className="bg-gray-50 p-4 rounded-lg border border-primary/10">
+                                    <div className="flex justify-between items-start mb-2">
+                                      <p className="text-sm text-gray-500">{new Date(consultation.consultationDate).toLocaleDateString()}</p>
+                                      <span className={`px-3 py-1 rounded-full text-sm font-semibold ${consultation.consultationStatus === "Completed" ? "bg-green-100 text-green-800" : consultation.consultationStatus === "Scheduled" ? "bg-blue-100 text-blue-800" : "bg-yellow-100 text-yellow-800"}`}>{consultation.consultationStatus}</span>
+                                    </div>
+                                    <p className="text-gray-700">{consultation.consultationDescription}</p>
                                   </div>
-                                </div>
-                              )}
-                          </div>
-                        )
-                      )
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ))
                     ) : (
-                      <div className="bg-white rounded-lg p-6 text-center text-gray-500">
-                        No diagnosis records available
-                      </div>
+                      <div className="bg-white rounded-lg p-8 text-center text-gray-500 shadow border border-primary/10">No diagnosis records available</div>
                     )}
                   </div>
                 </div>
-
-                {/* Personal Records Section */}
-                <div className="mt-6 mb-6">
-                  <h4 className="text-[18.1px] font-extrabold mb-4">
-                    Personal Records
-                  </h4>
-                  <div className="space-y-6">
-                    {state.medicalRecords?.personalRecords ? (
-                      <div className="bg-white rounded-lg p-6 shadow-sm">
-                        {/* Work Information */}
-                        <div>
-                          <h6 className="font-medium text-[16px] mb-4">
-                            Work Information
-                          </h6>
-                          <div className="grid grid-cols-2 gap-4 mb-6">
-                            <div>
-                              <p className="text-gray-600 text-sm">Work Name</p>
-                              <p className="text-gray-900">
-                                {state.medicalRecords.personalRecords.workName}
-                              </p>
-                            </div>
-                            <div>
-                              <p className="text-gray-600 text-sm">
-                                Work Place
-                              </p>
-                              <p className="text-gray-900">
-                                {state.medicalRecords.personalRecords.workPlace}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Family Information */}
-                        <div className="mt-6 pt-6 border-t">
-                          <h6 className="font-medium text-[16px] mb-4">
-                            Family Information
-                          </h6>
-                          <div className="grid grid-cols-2 gap-4 mb-6">
-                            <div>
-                              <p className="text-gray-600 text-sm">
-                                Number of Children
-                              </p>
-                              <p className="text-gray-900">
-                                {
-                                  state.medicalRecords.personalRecords
-                                    .childrenNumber
-                                }
-                              </p>
-                            </div>
-                            <div>
-                              <p className="text-gray-600 text-sm">
-                                First Child Birth Date
-                              </p>
-                              <p className="text-gray-900">
-                                {
-                                  state.medicalRecords.personalRecords
-                                    .birthDateOfFirstChild
-                                }
-                              </p>
-                            </div>
-                            <div>
-                              <p className="text-gray-600 text-sm">
-                                Number of Wives
-                              </p>
-                              <p className="text-gray-900">
-                                {
-                                  state.medicalRecords.personalRecords
-                                    .wifesNumber
-                                }
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Lifestyle Information */}
-                        <div className="mt-6 pt-6 border-t">
-                          <h6 className="font-medium text-[16px] mb-4">
-                            Lifestyle Information
-                          </h6>
-                          <div className="grid grid-cols-2 gap-4 mb-6">
-                            <div>
-                              <p className="text-gray-600 text-sm">
-                                Smoking Status
-                              </p>
-                              <span
-                                className={`inline-block px-3 py-1 rounded-full text-sm mt-1 ${
-                                  state.medicalRecords.personalRecords
-                                    .smoking === "Yes"
-                                    ? "bg-red-100 text-red-800"
-                                    : state.medicalRecords.personalRecords
-                                        .smoking === "Former smoker"
-                                    ? "bg-yellow-100 text-yellow-800"
-                                    : "bg-green-100 text-green-800"
-                                }`}
-                              >
-                                {state.medicalRecords.personalRecords.smoking}
-                              </span>
-                            </div>
-                            <div>
-                              <p className="text-gray-600 text-sm">
-                                Alcohol Consumption
-                              </p>
-                              <p className="text-gray-900">
-                                {state.medicalRecords.personalRecords.alcohol}
-                              </p>
-                            </div>
-                          </div>
-
-                          {/* Pets Information */}
-                          <div className="mt-4">
-                            <p className="text-gray-600 text-sm mb-2">Pets</p>
-                            <div className="flex flex-wrap gap-2">
-                              {state.medicalRecords.personalRecords.petsTypes &&
-                              state.medicalRecords.personalRecords.petsTypes
-                                .length > 0 ? (
-                                state.medicalRecords.personalRecords.petsTypes.map(
-                                  (pet, index) => (
-                                    <span
-                                      key={index}
-                                      className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm"
-                                    >
-                                      {pet}
-                                    </span>
-                                  )
-                                )
-                              ) : (
-                                <span className="text-gray-500">
-                                  No pets recorded
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="bg-white rounded-lg p-6 text-center text-gray-500">
-                        No personal records available
-                      </div>
-                    )}
-                  </div>
-                </div>
-                {/* Family History */}
-                <div className="mt-6">
-                  <h4 className="text-[18.1px] font-medium mb-2">
-                    Family History:
-                  </h4>
-                  <div className="grid grid-cols-2 gap-8">
-                    <div>
-                      <p className="text-[18.1px] font-medium mb-1">
-                        Genetic Diseases:
-                      </p>
-                      <div className="flex gap-4">
-                        <ul className="space-y-0.5 text-[18.1px] text-[#0000000]">
-                          {state.medicalRecords?.medicalRecord?.familyHistory?.genaticsDiseases?.map(
-                            (disease, index) => <li key={index}>• {disease}</li>
-                          ) || <li>• No data available</li>}
-                        </ul>
-                      </div>
-                    </div>
-                    <div>
-                      <p className="text-[18.1px] font-medium mb-1">
-                        Genatics:
-                      </p>
-                      <div className="flex gap-4">
-                        <ul className="space-y-0.5 text-[18.1px] text-[#0000000]">
-                          {state.medicalRecords?.medicalRecord?.familyHistory?.genatics?.map(
-                            (genatic, index) => <li key={index}>• {genatic}</li>
-                          ) || <li>• No data available</li>}
-                        </ul>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+              </section>
+            )}
               </div>
 
-              {!state.hasAccess && (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <button
-                    onClick={() => setShowAccessPopup(true)}
-                    className="bg-[#16423C] text-white px-20 py-4 font-black rounded-lg text-[18.1px] flex items-center gap-2"
-                  >
-                    <FaLock /> Get Access
-                  </button>
-                </div>
-              )}
-            </div>
-
-            <div className="flex gap-4 ">
-              {/* Prescription Section */}
-              <div className="bg-[#E9EFEC] rounded-xl shadow-lg p-6 flex-1 ">
-                <h3 className="text-[18.1px] font-extrabold mb-2">
-                  Prescription
+          {/* Prescription Panel at the bottom */}
+          <div className="w-full mt-8">
+            <div className="bg-gradient-to-r from-tertiary/10 to-secondary/10 border-l-4 border-tertiary rounded-2xl shadow-lg p-8">
+              <h3 className="text-[20px] font-extrabold mb-4 text-primary flex items-center gap-2 border-b border-secondary/30 pb-2">
+                <FaNotesMedical className="text-xl" /> Prescription
                 </h3>
-                <div className="grid grid-cols-4 gap-6">
+              <div className="grid grid-cols-4 gap-6 mb-6">
                   <div>
-                    <h4 className="text-[18.1px] font-medium mb-2">
-                      Medication
-                    </h4>
+                  <h4 className="text-base font-semibold mb-2">Medication</h4>
                     <input
                       type="text"
-                      className="w-full p-2 border rounded-lg shadow-sm border-[#D0D5DD] placeholder-gray-500"
+                    className="w-full p-2 border rounded-lg shadow-sm border-[#D0D5DD] placeholder-gray-500 focus:ring-2 focus:ring-tertiary"
                       placeholder="Medication"
                       value={newPrescription.medication}
-                      onChange={(e) =>
-                        setNewPrescription({
-                          ...newPrescription,
-                          medication: e.target.value,
-                        })
-                      }
+                    onChange={(e) => setNewPrescription({ ...newPrescription, medication: e.target.value })}
                     />
                   </div>
                   <div>
-                    <h4 className="text-[18.1px] font-medium mb-2">Dosage</h4>
+                  <h4 className="text-base font-semibold mb-2">Dosage</h4>
                     <input
                       type="text"
-                      className="w-full p-2 border rounded-lg shadow-sm border-[#D0D5DD] placeholder-gray-500"
+                    className="w-full p-2 border rounded-lg shadow-sm border-[#D0D5DD] placeholder-gray-500 focus:ring-2 focus:ring-tertiary"
                       placeholder="Dosage"
                       value={newPrescription.dosage}
-                      onChange={(e) =>
-                        setNewPrescription({
-                          ...newPrescription,
-                          dosage: e.target.value,
-                        })
-                      }
+                    onChange={(e) => setNewPrescription({ ...newPrescription, dosage: e.target.value })}
                     />
                   </div>
                   <div>
-                    <h4 className="text-[18.1px] font-medium mb-2">
-                      Frequency (per day)
-                    </h4>
+                  <h4 className="text-base font-semibold mb-2">Frequency (per day)</h4>
                     <input
                       type="number"
-                      className="w-full p-2 border rounded-lg shadow-sm border-[#D0D5DD] placeholder-gray-500"
+                    className="w-full p-2 border rounded-lg shadow-sm border-[#D0D5DD] placeholder-gray-500 focus:ring-2 focus:ring-tertiary"
                       placeholder="Frequency"
                       value={newPrescription.frequency}
-                      onChange={(e) =>
-                        setNewPrescription({
-                          ...newPrescription,
-                          frequency: e.target.value,
-                        })
-                      }
+                    onChange={(e) => setNewPrescription({ ...newPrescription, frequency: e.target.value })}
                     />
                   </div>
                   <div className="flex items-end">
                     <div className="flex-1">
-                      <h4 className="text-[18.1px] font-medium mb-2">
-                        Duration (weeks)
-                      </h4>
+                    <h4 className="text-base font-semibold mb-2">Duration (weeks)</h4>
                       <input
                         type="number"
-                        className="w-full p-2 border rounded-lg shadow-sm border-[#D0D5DD] placeholder-gray-500"
+                      className="w-full p-2 border rounded-lg shadow-sm border-[#D0D5DD] placeholder-gray-500 focus:ring-2 focus:ring-tertiary"
                         placeholder="Duration"
                         value={newPrescription.duration}
-                        onChange={(e) =>
-                          setNewPrescription({
-                            ...newPrescription,
-                            duration: e.target.value,
-                          })
-                        }
+                      onChange={(e) => setNewPrescription({ ...newPrescription, duration: e.target.value })}
                       />
                     </div>
                     <button
-                      className="ml-2 bg-[#16423C] text-white font-black w-11 h-11 flex items-center justify-center rounded-full text-[18px]"
+                    className="ml-2 bg-tertiary text-white font-black w-11 h-11 flex items-center justify-center rounded-full text-[20px] shadow hover:bg-primary transition"
                       onClick={addPrescription}
                     >
                       +
                     </button>
                   </div>
                 </div>
-                <div className="flex justify-between gap-6 w-full mt-4">
+              <div className="flex flex-col md:flex-row gap-6 w-full mb-6">
                   <div className="flex-1">
-                    <h4 className="text-[18.1px] font-medium mb-2">
-                      Diagnosis
-                    </h4>
+                  <h4 className="text-base font-semibold mb-2">Diagnosis</h4>
                     <textarea
-                      className="w-full h-32 p-4 border rounded-lg shadow-lg border-[#D0D5DD] placeholder-gray-500"
+                    className="w-full h-24 p-4 border rounded-lg shadow-lg border-[#D0D5DD] placeholder-gray-500 focus:ring-2 focus:ring-tertiary"
                       placeholder="Diagnosis"
                       value={state.diagnosis}
-                      onChange={(e) =>
-                        updateProp("diagnosis", e.target.value.split(","))
-                      }
+                    onChange={(e) => updateProp("diagnosis", e.target.value.split(","))}
                     />
                   </div>
                   <div className="flex-1">
-                    <h4 className="text-[18.1px] font-medium mb-2">Notes</h4>
+                  <h4 className="text-base font-semibold mb-2">Notes</h4>
                     <textarea
-                      className="w-full h-32 p-4 border rounded-lg shadow-lg border-[#D0D5DD] placeholder-gray-500"
+                    className="w-full h-24 p-4 border rounded-lg shadow-lg border-[#D0D5DD] placeholder-gray-500 focus:ring-2 focus:ring-tertiary"
                       placeholder="Notes"
                       value={state.notes}
                       onChange={(e) => updateProp("notes", e.target.value)}
@@ -974,21 +768,17 @@ const MedicalRecordsScreen = () => {
                   </div>
                 </div>
                 {state.prescriptions && state.prescriptions.length > 0 && (
-                  <ul className="mt-4 space-y-2">
+                <ul className="mt-4 space-y-2 mb-6">
                     {state.prescriptions.map((prescription, index) => (
                       <li
                         key={index}
-                        className="text-[18.1px] text-[#0000000] flex justify-between items-center"
+                      className="text-base text-[#000000] flex justify-between items-center bg-white rounded-lg px-4 py-2 shadow border border-secondary/30"
                       >
                         <div>
-                          <strong>Medication:</strong> {prescription.medication}
-                          , <strong>Dosage:</strong> {prescription.dosage},{" "}
-                          <strong>Frequency:</strong> {prescription.frequency}{" "}
-                          times/day, <strong>Duration:</strong>{" "}
-                          {prescription.duration} weeks
+                        <strong>Medication:</strong> {prescription.medication}, <strong>Dosage:</strong> {prescription.dosage}, <strong>Frequency:</strong> {prescription.frequency} times/day, <strong>Duration:</strong> {prescription.duration} weeks
                         </div>
                         <button
-                          className="bg-[#16423C] text-white font-black w-11 h-11 flex items-center justify-center rounded-full text-[18px]"
+                        className="bg-red-500 text-white font-black w-8 h-8 flex items-center justify-center rounded-full text-[18px] shadow hover:bg-red-700 transition"
                           onClick={() => removePrescription(index)}
                         >
                           -
@@ -997,56 +787,50 @@ const MedicalRecordsScreen = () => {
                     ))}
                   </ul>
                 )}
-              </div>
-
               {/* Follow Up Section */}
-              <div className="flex flex-col items-center">
-                {showFollowUpQuestion ? (
-                  <div className="bg-[#E9EFEC] rounded-xl shadow-lg p-6 w-[300px] self-start">
-                    <h3 className="text-[18.1px] font-extrabold mb-2">
-                      Is there a follow-up?
-                    </h3>
+              <div className="flex flex-col md:flex-row items-center gap-6 mb-6">
+                <div className="flex flex-col gap-2">
+                  <h4 className="text-base font-semibold mb-2">Is there a follow-up?</h4>
                     <div className="flex gap-4">
-                      <label>
+                    <label className="flex items-center gap-2 cursor-pointer">
                         <input
                           type="radio"
                           name="followUp"
                           value="yes"
+                        checked={!!state.followUpDate}
                           onChange={handleFollowUpChange}
-                        />{" "}
+                        className="accent-tertiary"
+                      />
                         Yes
                       </label>
-                      <label>
+                    <label className="flex items-center gap-2 cursor-pointer">
                         <input
                           type="radio"
                           name="followUp"
                           value="no"
+                        checked={!state.followUpDate}
                           onChange={handleFollowUpChange}
-                        />{" "}
+                        className="accent-tertiary"
+                      />
                         No
                       </label>
                     </div>
                   </div>
-                ) : (
-                  state.followUpDate && (
-                    <div className="bg-[#E9EFEC] rounded-xl shadow-lg p-6 w-[300px] self-start">
-                      <h3 className="text-[18.1px] font-extrabold mb-2">
-                        Follow Up Date
-                      </h3>
+                {state.followUpDate && (
+                  <div className="flex flex-col gap-2">
+                    <h4 className="text-base font-semibold mb-2">Follow Up Date</h4>
                       <input
                         type="date"
-                        className="w-full p-2 border rounded"
+                      className="w-full p-2 border rounded shadow border-[#D0D5DD] focus:ring-2 focus:ring-tertiary"
                         value={state.followUpDate}
-                        onChange={(e) =>
-                          updateProp("followUpDate", e.target.value)
-                        }
+                      onChange={(e) => updateProp("followUpDate", e.target.value)}
                       />
                     </div>
-                  )
                 )}
-                <div className="mt-4">
+              </div>
+              <div className="flex justify-end">
                   <button
-                    className="bg-[#16423C] text-white font-black px-28 py-3 border rounded-lg text-[18.1px]"
+                  className="bg-primary text-white font-bold px-10 py-3 rounded-lg text-lg shadow hover:bg-tertiary transition"
                     onClick={submitData}
                   >
                     Submit
@@ -1056,8 +840,6 @@ const MedicalRecordsScreen = () => {
             </div>
           </div>
         </div>
-      </div>
-
       {showAccessPopup && <AccessPopup />}
       {toast.show && (
         <Toast
