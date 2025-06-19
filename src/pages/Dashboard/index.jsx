@@ -15,7 +15,6 @@ import {
   FaPlus,
   FaCheckCircle,
   FaRegCircle,
-
 } from "react-icons/fa";
 import {
   LineChart,
@@ -30,13 +29,18 @@ import { DASHBOARD_SECTIONS } from "../../helpers/constants/StaticKeys";
 import Logic from "./logic";
 import { useNavigate } from "react-router-dom";
 import { DOCTOR_INFO } from "../../helpers/constants/StaticKeys";
-import { getTodos, createTodos, updateTodos, deleteTodos } from "../../api/services/TodoServices";
+import {
+  getTodos,
+  createTodos,
+  updateTodos,
+  deleteTodos,
+} from "../../api/services/TodoServices";
 
 const getIconComponent = (id) => {
   switch (id) {
     case "income":
       return <FaMoneyBillWave className="text-purple-500 text-2xl" />;
-    case "subscription":
+    case "todayPatients":
       return <FaCalendarAlt className="text-blue-500 text-2xl" />;
     case "patients":
       return <FaUserInjured className="text-green-500 text-2xl" />;
@@ -46,16 +50,16 @@ const getIconComponent = (id) => {
 };
 
 const DashboardScreen = () => {
-   const doctorData = localStorage.getItem(DOCTOR_INFO);
-   const doctor = JSON.parse(doctorData);
-  const { 
-    state, 
-    error, 
+  const doctorData = localStorage.getItem(DOCTOR_INFO);
+  const doctor = JSON.parse(doctorData);
+  const {
+    state,
+    error,
     loading,
-    setError, 
-    updateProp, 
-    handleCancelAppointment, 
-    handleDeleteAppointment 
+    setError,
+    updateProp,
+    handleCancelAppointment,
+    handleDeleteAppointment,
   } = Logic();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -69,10 +73,20 @@ const DashboardScreen = () => {
       // Reconstruct the icons after loading from localStorage
       return parsed.map((section) => {
         if (section.id === "stats") {
-          section.subsections = section.subsections.map((subsection) => ({
-            ...subsection,
-            icon: getIconComponent(subsection.id),
-          }));
+          section.subsections = section.subsections.map((subsection) => {
+            if (subsection.id === "subscription") {
+              return {
+                id: "todayPatients",
+                title: "Today's Patients",
+                value: state.todayPatients?.toString() || "0",
+                icon: getIconComponent("todayPatients"),
+              };
+            }
+            return {
+              ...subsection,
+              icon: getIconComponent(subsection.id),
+            };
+          });
         }
         return section;
       });
@@ -90,9 +104,9 @@ const DashboardScreen = () => {
             icon: <FaMoneyBillWave className="text-purple-500 text-2xl" />,
           },
           {
-            id: "subscription",
-            title: "Subscription Time Left",
-            value: "20 Days",
+            id: "todayPatients",
+            title: "Today's Patients",
+            value: state.totalPatientsToday?.toString() || "0",
             icon: <FaCalendarAlt className="text-blue-500 text-2xl" />,
           },
           {
@@ -128,7 +142,7 @@ const DashboardScreen = () => {
         id: "patients-table",
         content: {
           type: "table",
-          title: "Recent Patients"
+          title: "Recent Patients",
         },
       },
     ];
@@ -150,7 +164,7 @@ const DashboardScreen = () => {
 
   const fetchTodos = () => {
     if (!doctor || !doctor._id) return;
-    
+
     setIsLoadingTodos(true);
     getTodos(
       { doctorId: doctor._id },
@@ -166,8 +180,6 @@ const DashboardScreen = () => {
     );
   };
 
-  
-
   const handleAddTodo = () => {
     if (!newTodoText.trim()) return;
 
@@ -175,7 +187,7 @@ const DashboardScreen = () => {
       {
         doctorId: doctor._id,
         title: newTodoText,
-        description: newTodoDescription
+        description: newTodoDescription,
       },
       (response) => {
         setTodos([...todos, response]);
@@ -196,12 +208,14 @@ const DashboardScreen = () => {
         todoId: todo._id,
         title: todo.title,
         description: todo.description,
-        completed: !todo.completed
+        completed: !todo.completed,
       },
       (response) => {
-        setTodos(todos.map(t => 
-          t._id === todo._id ? { ...t, completed: !t.completed } : t
-        ));
+        setTodos(
+          todos.map((t) =>
+            t._id === todo._id ? { ...t, completed: !t.completed } : t
+          )
+        );
       },
       (error) => {
         console.error("Error updating todo:", error);
@@ -216,10 +230,10 @@ const DashboardScreen = () => {
     deleteTodos(
       {
         doctorId: doctor._id,
-        todoId
+        todoId,
       },
       (response) => {
-        setTodos(todos.filter(t => t._id !== todoId));
+        setTodos(todos.filter((t) => t._id !== todoId));
       },
       (error) => {
         console.error("Error deleting todo:", error);
@@ -243,12 +257,10 @@ const DashboardScreen = () => {
         todoId: editingTodo._id,
         title: newTodoText,
         description: newTodoDescription,
-        completed: editingTodo.completed
+        completed: editingTodo.completed,
       },
       (response) => {
-        setTodos(todos.map(t => 
-          t._id === editingTodo._id ? response : t
-        ));
+        setTodos(todos.map((t) => (t._id === editingTodo._id ? response : t)));
         setEditingTodo(null);
         setNewTodoText("");
         setNewTodoDescription("");
@@ -271,10 +283,10 @@ const DashboardScreen = () => {
     deleteTodos(
       {
         doctorId: doctor._id,
-        todoId: todoToDelete._id
+        todoId: todoToDelete._id,
       },
       (response) => {
-        setTodos(todos.filter(t => t._id !== todoToDelete._id));
+        setTodos(todos.filter((t) => t._id !== todoToDelete._id));
         setShowDeleteAlert(false);
         setTodoToDelete(null);
       },
@@ -306,11 +318,15 @@ const DashboardScreen = () => {
     // Update the income value in mainSections when todayIncome changes
     if (mainSections.length > 0) {
       const updatedSections = [...mainSections];
-      const statsSection = updatedSections.find(section => section.id === "stats");
-      
+      const statsSection = updatedSections.find(
+        (section) => section.id === "stats"
+      );
+
       if (statsSection && statsSection.subsections) {
-        const incomeSubsection = statsSection.subsections.find(sub => sub.id === "income");
-        
+        const incomeSubsection = statsSection.subsections.find(
+          (sub) => sub.id === "income"
+        );
+
         if (incomeSubsection) {
           // Format the income value with $ sign
           incomeSubsection.value = `$${state.todayIncome || 0}`;
@@ -318,20 +334,25 @@ const DashboardScreen = () => {
         }
       }
     }
-  }, [state.todayIncome]);
+  }, [state.todayIncome, state.totalPatientsToday]);
 
   useEffect(() => {
     // Update the total patients value in mainSections when totalPatientsThisMonth changes
     if (mainSections.length > 0) {
       const updatedSections = [...mainSections];
-      const statsSection = updatedSections.find(section => section.id === "stats");
-      
+      const statsSection = updatedSections.find(
+        (section) => section.id === "stats"
+      );
+
       if (statsSection && statsSection.subsections) {
-        const patientsSubsection = statsSection.subsections.find(sub => sub.id === "patients");
-        
+        const patientsSubsection = statsSection.subsections.find(
+          (sub) => sub.id === "patients"
+        );
+
         if (patientsSubsection) {
           // Set the value directly from the state
-          patientsSubsection.value = state.totalPatientsThisMonth?.toString() || "0";
+          patientsSubsection.value =
+            state.totalPatientsThisMonth?.toString() || "0";
           setMainSections(updatedSections);
         }
       }
@@ -341,11 +362,15 @@ const DashboardScreen = () => {
   useEffect(() => {
     if (mainSections.length > 0) {
       const updatedSections = [...mainSections];
-      const chartsSection = updatedSections.find(section => section.id === "charts");
-      
+      const chartsSection = updatedSections.find(
+        (section) => section.id === "charts"
+      );
+
       if (chartsSection && chartsSection.subsections) {
-        const monthlyIncomeSubsection = chartsSection.subsections.find(sub => sub.id === "monthly-income");
-        
+        const monthlyIncomeSubsection = chartsSection.subsections.find(
+          (sub) => sub.id === "monthly-income"
+        );
+
         if (monthlyIncomeSubsection && state.yearlyStats) {
           monthlyIncomeSubsection.data = state.yearlyStats;
           setMainSections(updatedSections);
@@ -392,12 +417,12 @@ const DashboardScreen = () => {
         accessor: "appointmentDate",
         Cell: ({ value }) => (
           <span className="text-gray-600">
-            {new Date(value).toLocaleDateString('en-US', {
-              year: 'numeric',
-              month: 'short',
-              day: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit'
+            {new Date(value).toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
             })}
           </span>
         ),
@@ -416,7 +441,9 @@ const DashboardScreen = () => {
         accessor: "bookingType",
         Cell: ({ value }) => (
           <div className="flex justify-center">
-            <span className="text-gray-600 capitalize">{value.replace('-', ' ')}</span>
+            <span className="text-gray-600 capitalize">
+              {value.replace("-", " ")}
+            </span>
           </div>
         ),
       },
@@ -425,13 +452,13 @@ const DashboardScreen = () => {
         accessor: "status",
         Cell: ({ value }) => {
           console.log("Status value:", value, "Type:", typeof value);
-          
+
           // Case-insensitive comparison
           const statusLower = value?.toLowerCase();
-          
+
           // Create the appropriate status element based on value
           let statusElement;
-          
+
           // For Completed - keep existing green
           if (statusLower === "completed") {
             statusElement = (
@@ -443,15 +470,17 @@ const DashboardScreen = () => {
           // For Cancelled - change to red
           else if (statusLower === "cancelled") {
             statusElement = (
-              <span style={{
-                padding: '0.25rem 0.5rem',
-                borderRadius: '9999px',
-                fontSize: '0.75rem',
-                fontWeight: '500',
-                display: 'inline-block',
-                backgroundColor: '#EF4444',  // bg-red-500
-                color: 'white'
-              }}>
+              <span
+                style={{
+                  padding: "0.25rem 0.5rem",
+                  borderRadius: "9999px",
+                  fontSize: "0.75rem",
+                  fontWeight: "500",
+                  display: "inline-block",
+                  backgroundColor: "#EF4444", // bg-red-500
+                  color: "white",
+                }}
+              >
                 {value}
               </span>
             );
@@ -464,13 +493,9 @@ const DashboardScreen = () => {
               </span>
             );
           }
-          
+
           // Return the status element wrapped in a centered container
-          return (
-            <div className="flex justify-center">
-              {statusElement}
-            </div>
-          );
+          return <div className="flex justify-center">{statusElement}</div>;
         },
       },
       {
@@ -501,12 +526,12 @@ const DashboardScreen = () => {
               {loading ? (
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-500"></div>
               ) : (
-                <div 
+                <div
                   className="relative flex flex-col items-center"
                   onMouseEnter={() => setTooltipVisible(true)}
                   onMouseLeave={() => setTooltipVisible(false)}
                 >
-                  <button 
+                  <button
                     className="hover:text-red-500 transition-colors duration-200 text-gray-600"
                     onClick={() => {
                       if (row.original.status === "Pending") {
@@ -516,9 +541,13 @@ const DashboardScreen = () => {
                       }
                     }}
                     disabled={loading}
-                    style={{ transition: 'color 0.2s ease' }}
-                    onMouseOver={(e) => e.currentTarget.style.color = '#EF4444'} 
-                    onMouseOut={(e) => e.currentTarget.style.color = '#4B5563'} 
+                    style={{ transition: "color 0.2s ease" }}
+                    onMouseOver={(e) =>
+                      (e.currentTarget.style.color = "#EF4444")
+                    }
+                    onMouseOut={(e) =>
+                      (e.currentTarget.style.color = "#4B5563")
+                    }
                   >
                     {row.original.status === "Pending" ? (
                       <FaTimes className="w-5 h-5" />
@@ -526,15 +555,15 @@ const DashboardScreen = () => {
                       <FaRegTrashAlt className="w-5 h-5" />
                     )}
                   </button>
-                  
+
                   {/* Tooltip that appears on hover */}
                   {tooltipVisible && (
-                    <div 
+                    <div
                       className="absolute top-full -translate-x-1/2 left-1/2 mt-1 bg-white shadow-lg rounded px-2 py-1 text-xs font-medium text-black whitespace-nowrap z-10"
-                      style={{ 
-                        transform: 'translateX(-50%)',
-                        maxWidth: 'fit-content',
-                        pointerEvents: 'none'  // Prevents the tooltip from capturing mouse events
+                      style={{
+                        transform: "translateX(-50%)",
+                        maxWidth: "fit-content",
+                        pointerEvents: "none", // Prevents the tooltip from capturing mouse events
                       }}
                     >
                       {row.original.status === "Pending" ? "Cancel" : "Delete"}
@@ -551,15 +580,19 @@ const DashboardScreen = () => {
   );
 
   const filteredPatients = useMemo(() => {
-    const filtered = state.appointments?.filter(
-      (patient) => {
+    const filtered =
+      state.appointments?.filter((patient) => {
         if (!patient || !patient.patientId) return false;
-        
-        return patient.patientId.userName.toLowerCase().includes(searchQuery.toLowerCase()) &&
-          (statusFilter === "all" || patient.status.toLowerCase() === statusFilter.toLowerCase());
-      }
-    ) || [];
-    
+
+        return (
+          patient.patientId.userName
+            .toLowerCase()
+            .includes(searchQuery.toLowerCase()) &&
+          (statusFilter === "all" ||
+            patient.status.toLowerCase() === statusFilter.toLowerCase())
+        );
+      }) || [];
+
     // Sort by appointment date (oldest first)
     return filtered.sort((a, b) => {
       return new Date(a.appointmentDate) - new Date(b.appointmentDate);
@@ -573,7 +606,7 @@ const DashboardScreen = () => {
   const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } =
     useTable({
       columns,
-      data: paginatedPatients
+      data: paginatedPatients,
     });
 
   const onDragEnd = (result) => {
@@ -617,13 +650,17 @@ const DashboardScreen = () => {
   };
 
   const handleLoadMore = () => {
-    setDisplayCount(prev => prev + 5);
+    setDisplayCount((prev) => prev + 5);
   };
 
   const handleRowClick = (patientData) => {
-    if (patientData && patientData.patientId && patientData.patientId.userEmail) {
-      navigate('/medicalRecords', { 
-        state: { patientEmail: patientData.patientId.userEmail }
+    if (
+      patientData &&
+      patientData.patientId &&
+      patientData.patientId.userEmail
+    ) {
+      navigate("/medicalRecords", {
+        state: { patientEmail: patientData.patientId.userEmail },
       });
     }
   };
@@ -638,22 +675,20 @@ const DashboardScreen = () => {
           </div>
         </div>
       )}
-      
+
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
           <strong>Error:</strong> {error}
-          <button 
-            className="float-right"
-            onClick={() => setError(null)}
-          >
+          <button className="float-right" onClick={() => setError(null)}>
             &times;
           </button>
         </div>
       )}
-      
-      <h1 className="text-3xl font-bold text-gray-800 mb-2">Dashboard</h1>
-      <h2 className="text-xl text-gray-600 mb-6">Welcome, {"DR."+doctor.doctorName}</h2>
 
+      <h1 className="text-3xl font-bold text-gray-800 mb-2">Dashboard</h1>
+      <h2 className="text-xl text-gray-600 mb-6">
+        Welcome, {"DR. " + doctor.doctorName}
+      </h2>
 
       <DragDropContext onDragEnd={onDragEnd}>
         <Droppable
@@ -708,7 +743,7 @@ const DashboardScreen = () => {
                                     <div
                                       ref={provided.innerRef}
                                       {...provided.draggableProps}
-                                      className={`bg-background rounded-xl p-6 w-full sm:w-[300px] md:w-[400px] lg:w-[500px] shadow-md flex-grow ${
+                                      className={`bg-background rounded-xl p-6 shadow-md flex-grow ${
                                         subsection.id === "notifications"
                                           ? "min-h-[340px]"
                                           : "max-h-full"
@@ -716,7 +751,7 @@ const DashboardScreen = () => {
                                     >
                                       <div className="text-sm sm:text-base">
                                         {subsection.type === "chart" ? (
-                                          <div className="w-[650px]">
+                                          <div className="w-[350px] pr-3">
                                             <div
                                               {...provided.dragHandleProps}
                                               className="flex justify-between mb-2"
@@ -728,9 +763,15 @@ const DashboardScreen = () => {
                                             </div>
 
                                             <LineChart
-                                              width={650}
-                                              height={240}
+                                              width={450}
+                                              height={289}
                                               data={subsection.data}
+                                              margin={{
+                                                top: 0,
+                                                right: 0,
+                                                left: 0,
+                                                bottom: 20,
+                                              }}
                                             >
                                               <CartesianGrid
                                                 strokeDasharray="3 3"
@@ -738,7 +779,12 @@ const DashboardScreen = () => {
                                               />
                                               <XAxis
                                                 dataKey="month"
-                                                tick={{ fill: "#6b7280" }}
+                                                tick={{
+                                                  fill: "#6b7280",
+                                                  angle: -45, // Rotate text to vertical
+                                                  textAnchor: "end",
+                                                  dy: 10, // Adjust vertical position
+                                                }}
                                               />
                                               <YAxis
                                                 tick={{ fill: "#6b7280" }}
@@ -772,117 +818,144 @@ const DashboardScreen = () => {
                                                 {subsection.title}
                                               </h3>
                                             </div>
-                                            <div className="space-y-4 p-4 bg-[#E9EFEC] rounded-lg">
-  {/* Input Card */}
-  <div className="bg-white rounded-md border border-[#C4DAD2] p-4 space-y-3 shadow-sm">
-    <input
-      type="text"
-      value={newTodoText}
-      onChange={(e) => setNewTodoText(e.target.value)}
-      onKeyDown={(e) =>
-        e.key === "Enter" &&
-        (editingTodo ? handleUpdateTodo() : handleAddTodo())
-      }
-      placeholder="Add a new task..."
-      className="w-full px-4 py-2 rounded-md border border-[#C4DAD2] bg-white text-[#2E354C] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#6A9C89]"
-    />
-    <textarea
-      value={newTodoDescription}
-      onChange={(e) => setNewTodoDescription(e.target.value)}
-      placeholder="Add a description (optional)"
-      className="w-full px-4 py-2 rounded-md border border-[#C4DAD2] bg-white text-[#2E354C] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#6A9C89] resize-none"
-      rows={2}
-    />
-    <div className="flex justify-end">
-      <button
-        onClick={editingTodo ? handleUpdateTodo : handleAddTodo}
-        className="flex items-center gap-2 bg-[#16423C] text-white px-5 py-2 rounded-md hover:bg-[#6A9C89] transition"
-      >
-        {editingTodo ? (
-          <>
-            <FaCheck className="w-4 h-4" />
-            Update Task
-          </>
-        ) : (
-          <>
-            <FaPlus className="w-4 h-4" />
-            Add Task
-          </>
-        )}
-      </button>
-    </div>
-  </div>
 
-  {/* Task List */}
-  <div className="max-h-64 overflow-y-auto space-y-3 pr-1 scrollbar-thin scrollbar-thumb-[#C4DAD2] scrollbar-track-transparent">
-    {isLoadingTodos ? (
-      <div className="flex justify-center py-4">
-        <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-[#16423C]"></div>
-      </div>
-    ) : (
-      <ul className="space-y-2">
-        {todos.map((todo) => (
-          <li
-            key={todo._id}
-            className="flex justify-between items-start p-4 bg-white rounded-lg border border-[#C4DAD2] shadow-sm"
-          >
-            <div className="flex items-start gap-3">
-              <input
-                type="checkbox"
-                checked={todo.completed}
-                onChange={() => handleToggleTodo(todo)}
-                className="h-5 w-5 mt-1 accent-[#16423C] rounded-md"
-              />
-              <div>
-                <p
-                  className={`font-semibold ${
-                    todo.completed
-                      ? "line-through text-gray-400"
-                      : "text-[#2E354C]"
-                  }`}
-                >
-                  {todo.title}
-                </p>
-                {todo.description && (
-                  <p className="text-sm text-gray-500">{todo.description}</p>
-                )}
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => handleEditTodo(todo)}
-                className="text-[#16423C] hover:text-[#6A9C89]"
-                title="Edit task"
-              >
-                <FaRegEdit className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => handleDeleteClick(todo)}
-                className="text-[#FD9B63] hover:text-red-600"
-                title="Delete task"
-              >
-                <FaRegTrashAlt className="w-4 h-4" />
-              </button>
-            </div>
-          </li>
-        ))}
-        {todos.length === 0 && (
-          <li className="text-center py-4 text-gray-500 bg-white rounded-lg border border-[#C4DAD2]">
-            No tasks yet. Add one above!
-          </li>
-        )}
-      </ul>
-    )}
-  </div>
-</div>
+                                            {/* Updated Flex Layout */}
+                                            <div className="flex flex-col md:flex-row gap-6 bg-[#E9EFEC] rounded-lg p-4 h-72">
+                                              {/* Input Card - Left Side */}
+                                              <div className="md:w-1/2 w-full bg-white rounded-md border border-[#C4DAD2] p-4 pt-6 space-y-3 shadow-sm">
+                                                <input
+                                                  type="text"
+                                                  value={newTodoText}
+                                                  onChange={(e) =>
+                                                    setNewTodoText(
+                                                      e.target.value
+                                                    )
+                                                  }
+                                                  onKeyDown={(e) =>
+                                                    e.key === "Enter" &&
+                                                    (editingTodo
+                                                      ? handleUpdateTodo()
+                                                      : handleAddTodo())
+                                                  }
+                                                  placeholder="Add a new task..."
+                                                  className="w-full px-4 py-2 rounded-md border border-[#C4DAD2] bg-white text-[#2E354C] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#6A9C89]"
+                                                />
+                                                <textarea
+                                                  value={newTodoDescription}
+                                                  onChange={(e) =>
+                                                    setNewTodoDescription(
+                                                      e.target.value
+                                                    )
+                                                  }
+                                                  placeholder="Add a description (optional)"
+                                                  className="w-full px-4 py-2 rounded-md border border-[#C4DAD2] bg-white text-[#2E354C] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#6A9C89] resize-none"
+                                                  rows={3}
+                                                />
+                                                <div className="flex justify-end">
+                                                  <button
+                                                    onClick={
+                                                      editingTodo
+                                                        ? handleUpdateTodo
+                                                        : handleAddTodo
+                                                    }
+                                                    className="flex items-center gap-2 bg-[#16423C] text-white px-5 py-2 rounded-md hover:bg-[#6A9C89] transition"
+                                                  >
+                                                    {editingTodo ? (
+                                                      <>
+                                                        <FaCheck className="w-4 h-4" />
+                                                        Update Task
+                                                      </>
+                                                    ) : (
+                                                      <>
+                                                        <FaPlus className="w-4 h-4" />
+                                                        Add Task
+                                                      </>
+                                                    )}
+                                                  </button>
+                                                </div>
+                                              </div>
 
-
-
-
-
-
-
-
+                                              {/* Task List - Right Side */}
+                                              <div className="md:w-1/2 w-full max-h-80 overflow-y-auto space-y-3 scrollbar-thin scrollbar-thumb-[#C4DAD2] scrollbar-track-transparent">
+                                                {isLoadingTodos ? (
+                                                  <div className="flex justify-center py-4">
+                                                    <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-[#16423C]"></div>
+                                                  </div>
+                                                ) : (
+                                                  <ul className="space-y-2">
+                                                    {todos.map((todo) => (
+                                                      <li
+                                                        key={todo._id}
+                                                        className="flex justify-between items-start p-4 bg-white rounded-lg border border-[#C4DAD2] shadow-sm"
+                                                      >
+                                                        <div className="flex items-start gap-3">
+                                                          <input
+                                                            type="checkbox"
+                                                            checked={
+                                                              todo.completed
+                                                            }
+                                                            onChange={() =>
+                                                              handleToggleTodo(
+                                                                todo
+                                                              )
+                                                            }
+                                                            className="h-5 w-5 mt-1 accent-[#16423C] rounded-full"
+                                                          />
+                                                          <div>
+                                                            <p
+                                                              className={`font-semibold ${
+                                                                todo.completed
+                                                                  ? "line-through text-gray-400"
+                                                                  : "text-[#2E354C]"
+                                                              }`}
+                                                            >
+                                                              {todo.title}
+                                                            </p>
+                                                            {todo.description && (
+                                                              <p className="text-sm text-gray-500">
+                                                                {
+                                                                  todo.description
+                                                                }
+                                                              </p>
+                                                            )}
+                                                          </div>
+                                                        </div>
+                                                        <div className="flex items-center gap-2">
+                                                          <button
+                                                            onClick={() =>
+                                                              handleEditTodo(
+                                                                todo
+                                                              )
+                                                            }
+                                                            className="text-[#16423C] hover:text-[#6A9C89]"
+                                                            title="Edit task"
+                                                          >
+                                                            <FaRegEdit className="w-4 h-4" />
+                                                          </button>
+                                                          <button
+                                                            onClick={() =>
+                                                              handleDeleteClick(
+                                                                todo
+                                                              )
+                                                            }
+                                                            className="text-[#FD9B63] hover:text-red-600"
+                                                            title="Delete task"
+                                                          >
+                                                            <FaRegTrashAlt className="w-4 h-4" />
+                                                          </button>
+                                                        </div>
+                                                      </li>
+                                                    ))}
+                                                    {todos.length === 0 && (
+                                                      <li className="text-center py-4 text-gray-500 bg-white rounded-lg border border-[#C4DAD2]">
+                                                        No tasks yet. Add one
+                                                        above!
+                                                      </li>
+                                                    )}
+                                                  </ul>
+                                                )}
+                                              </div>
+                                            </div>
                                           </div>
                                         ) : (
                                           <div>
@@ -941,7 +1014,10 @@ const DashboardScreen = () => {
                           </div>
 
                           <div className="border border-gray-200 rounded-lg overflow-hidden shadow-sm">
-                            <div className="overflow-x-auto" style={{ overflowY: 'hidden' }}>
+                            <div
+                              className="overflow-x-auto"
+                              style={{ overflowY: "hidden" }}
+                            >
                               <table
                                 {...getTableProps()}
                                 className="w-full divide-y divide-gray-200"
@@ -979,16 +1055,21 @@ const DashboardScreen = () => {
                                         key={rowIndex}
                                       >
                                         {row.cells.map((cell, cellIndex) => {
-                                          const isActionsColumn = cellIndex === row.cells.length - 1;
-                                          
+                                          const isActionsColumn =
+                                            cellIndex === row.cells.length - 1;
+
                                           return (
                                             <td
                                               {...cell.getCellProps()}
-                                              className={`px-6 py-4 whitespace-nowrap ${!isActionsColumn ? 'cursor-pointer' : ''}`}
+                                              className={`px-6 py-4 whitespace-nowrap ${
+                                                !isActionsColumn
+                                                  ? "cursor-pointer"
+                                                  : ""
+                                              }`}
                                               key={cellIndex}
                                               onClick={(e) => {
                                                 e.stopPropagation();
-                                                
+
                                                 // Only navigate if this is NOT the actions column
                                                 if (!isActionsColumn) {
                                                   handleRowClick(row.original);
@@ -1002,17 +1083,31 @@ const DashboardScreen = () => {
                                       </tr>
                                     );
                                   })}
-                                  
+
                                   {filteredPatients.length > displayCount && (
                                     <tr>
-                                      <td colSpan={columns.length} className="px-6 py-4">
-                                        <button 
+                                      <td
+                                        colSpan={columns.length}
+                                        className="px-6 py-4"
+                                      >
+                                        <button
                                           onClick={handleLoadMore}
                                           className="w-full py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-md transition-colors flex items-center justify-center"
                                         >
                                           Load More
-                                          <svg className="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                          <svg
+                                            className="ml-2 w-4 h-4"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24"
+                                            xmlns="http://www.w3.org/2000/svg"
+                                          >
+                                            <path
+                                              strokeLinecap="round"
+                                              strokeLinejoin="round"
+                                              strokeWidth={2}
+                                              d="M19 9l-7 7-7-7"
+                                            />
                                           </svg>
                                         </button>
                                       </td>
@@ -1024,18 +1119,20 @@ const DashboardScreen = () => {
 
                             {filteredPatients.length === 0 && (
                               <div className="text-center py-6 bg-white">
-                                <p className="text-gray-500">
-                                  {loading ? (
-                                    <div className="flex items-center justify-center">
-                                      <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-primary mr-2"></div>
-                                      Loading appointments...
-                                    </div>
-                                  ) : state.appointments?.length === 0 ? (
-                                    "No appointments found"
-                                  ) : (
-                                    "No matching patients found"
-                                  )}
-                                </p>
+                                {loading ? (
+                                  <div className="flex items-center justify-center text-gray-500">
+                                    <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-primary mr-2"></div>
+                                    Loading appointments...
+                                  </div>
+                                ) : state.appointments?.length === 0 ? (
+                                  <p className="text-gray-500">
+                                    No appointments found
+                                  </p>
+                                ) : (
+                                  <p className="text-gray-500">
+                                    No matching patients found
+                                  </p>
+                                )}
                               </div>
                             )}
                           </div>
@@ -1066,13 +1163,16 @@ const DashboardScreen = () => {
                 }}
                 className="ml-auto text-red-500 hover:text-red-600 transition-colors duration-200"
                 aria-label="Close delete alert"
-              >
-              
-              </button>
+              ></button>
             </div>
             <p className="text-textColor mb-6 text-base font-medium leading-relaxed">
-              Are you sure you want to <span className='text-red-600 font-semibold'>delete</span> <span className='font-semibold'>"{todoToDelete?.title}"</span>?<br />
-              <span className="text-gray-500 text-sm">This action cannot be undone.</span>
+              Are you sure you want to{" "}
+              <span className="text-red-600 font-semibold">delete</span>{" "}
+              <span className="font-semibold">{todoToDelete?.title}</span>?
+              <br />
+              <span className="text-gray-500 text-sm">
+                This action cannot be undone.
+              </span>
             </p>
             <div className="flex justify-end gap-3">
               <button

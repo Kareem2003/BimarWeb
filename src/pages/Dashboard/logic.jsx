@@ -4,11 +4,11 @@ import { INITIAL_STATE } from "./constant";
 import ACTION_TYPES from "../../reducers/actionTypes";
 import {
   fetchAppointments,
-  cancelAppointment, 
-  deleteAppointment, 
-  getTodayIncome, 
+  cancelAppointment,
+  deleteAppointment,
+  getTodayIncome,
   getMonthlyIncome,
-  getYearlyIncome
+  getYearlyIncome,
 } from "../../api/services/DashboardServices";
 
 const Logic = () => {
@@ -59,18 +59,23 @@ const Logic = () => {
       getTodayIncome(
         {},
         (res) => {
-          console.log("Today's income response:", res);
-          updateProp("todayIncome", res.totalMoney || 0);
+          // Support both res.data and res directly
+          const data = res.data || res;
+          console.log("Today's income response:", data);
+          updateProp("todayIncome", data.totalMoney);
+          updateProp("totalPatientsToday", data.totalPatientsToday);
         },
         (err) => {
           console.error("Error fetching today's income:", err);
           updateProp("todayIncome", 0);
+          updateProp("totalPatientsToday", 0);
         },
         () => {}
       );
     } catch (error) {
       console.error("Exception in updateTodayIncome:", error);
       updateProp("todayIncome", 0);
+      updateProp("totalPatientsToday", 0);
     }
   };
 
@@ -100,9 +105,11 @@ const Logic = () => {
         {},
         (res) => {
           console.log("Yearly stats response:", res);
-          const chartData = res.map(item => ({
-            month: new Date(2024, item.month - 1).toLocaleString('default', { month: 'short' }),
-            income: item.totalMoney
+          const chartData = res.map((item) => ({
+            month: new Date(2024, item.month - 1).toLocaleString("default", {
+              month: "short",
+            }),
+            income: item.totalMoney,
           }));
           updateProp("yearlyStats", chartData);
         },
@@ -195,7 +202,7 @@ const Logic = () => {
     updateAppointments,
     updateTodayIncome,
     updateMonthlyStats,
-    updateYearlyStats
+    updateYearlyStats,
   };
 };
 
