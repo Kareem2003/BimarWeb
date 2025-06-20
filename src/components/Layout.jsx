@@ -50,10 +50,10 @@ const Layout = ({ children, hideNavigation = false }) => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <header className="bg-primary shadow-md">
-        <div className="container mx-auto px-6 py-3">
-          <div className="flex items-center justify-between">
+    <div className="w-full min-h-screen flex flex-col">
+      <header className="w-full bg-primary shadow-md">
+        <div className="w-full flex justify-center py-3">
+          <div className="w-full max-w-full flex items-center justify-between px-16">
             {/* Logo on the left */}
             <div className="flex items-center">
               <img src={Logo} alt="Bimar Logo" className="h-12" />
