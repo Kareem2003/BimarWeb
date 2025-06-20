@@ -35,6 +35,7 @@ import {
   updateTodos,
   deleteTodos,
 } from "../../api/services/TodoServices";
+import Cookies from "js-cookie";
 
 const getIconComponent = (id) => {
   switch (id) {
@@ -659,8 +660,14 @@ const DashboardScreen = () => {
       patientData.patientId &&
       patientData.patientId.userEmail
     ) {
+      // Save to cookies for persistence
+      Cookies.set("APPOINTMENT_ID", patientData._id);
+      Cookies.set("PATIENT_EMAIL", patientData.patientId.userEmail);
       navigate("/medicalRecords", {
-        state: { patientEmail: patientData.patientId.userEmail },
+        state: {
+          patientEmail: patientData.patientId.userEmail,
+          appointmentId: patientData._id,
+        },
       });
     }
   };

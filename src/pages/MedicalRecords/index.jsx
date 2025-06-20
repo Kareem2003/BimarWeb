@@ -8,6 +8,7 @@ import {
   FaUserFriends,
   FaUsers,
   FaEdit,
+  FaRegTrashAlt,
 } from "react-icons/fa";
 import Layout from "../../components/Layout";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -23,6 +24,7 @@ import { DOCTOR_INFO } from "../../helpers/constants/StaticKeys";
 import {
   getMedicalRecord,
   updateMedicalRecord,
+  updateAppointment,
 } from "../../api/services/AccessServices";
 
 const SECTIONS = [
@@ -56,13 +58,11 @@ const MedicalRecordsScreen = () => {
     if (doctorData && doctorData.trim().startsWith("{")) {
       try {
         const doctor = JSON.parse(doctorData);
-        console.log("Doctor Data:", doctor); // Console log to verify data
         setDoctorEmail(doctor.doctorEmail);
         setDoctorName(doctor.doctorName);
         setDoctorImage(doctor.doctorImage);
         setDoctorPhone(doctor.doctorPhone || "123-456-7890"); // Fallback if phone is not available
       } catch (error) {
-        console.error("Error parsing doctor data:", error);
         setDoctorEmail("bimar.med24@gmail.com"); // Fallback to default email
         setToast({
           show: true,
@@ -75,10 +75,16 @@ const MedicalRecordsScreen = () => {
 
   // Handle data loading after successful verification
   useEffect(() => {
+    // Always prefer sessionStorage/cookies if location.state.appointmentId is null/undefined/empty
+    const appointmentId = (location.state && location.state.appointmentId != null && location.state.appointmentId !== "")
+      ? location.state.appointmentId
+      : sessionStorage.getItem("APPOINTMENT_ID") || Cookies.get("APPOINTMENT_ID");
+    const patientEmail = (location.state && location.state.patientEmail != null && location.state.patientEmail !== "")
+      ? location.state.patientEmail
+      : sessionStorage.getItem("PATIENT_EMAIL") || Cookies.get("PATIENT_EMAIL");
     if (location.state && location.state.data) {
       try {
         const medicalData = location.state.data;
-        console.log("Medical Data:", medicalData); // Console log to verify data
         updateProp("hasAccess", true);
         updateProp("medicalRecords", medicalData);
         setToast({
@@ -86,13 +92,10 @@ const MedicalRecordsScreen = () => {
           message: "Access granted successfully!",
           type: "success",
         });
-      } catch (err) {
-        console.error("Error parsing medical data:", err);
-      }
+      } catch (err) {}
     }
-    if (location.state && location.state.patientEmail) {
-      console.log("Patient Email from Dashboard:", location.state.patientEmail);
-      updateProp("patientEmail", location.state.patientEmail);
+    if (patientEmail) {
+      updateProp("patientEmail", patientEmail);
     }
   }, [location.state]);
 
@@ -104,7 +107,6 @@ const MedicalRecordsScreen = () => {
         accessDuration: parseInt(state.accessDuration),
       },
       (res) => {
-        console.log("Res: ", res);
         setToast({
           show: true,
           message:
@@ -122,7 +124,6 @@ const MedicalRecordsScreen = () => {
             "Failed to request access. Please try again.",
           type: "error",
         });
-        console.error("Request access error:", err);
         setShowAccessPopup(false);
       },
       () => {}
@@ -199,11 +200,48 @@ const MedicalRecordsScreen = () => {
       },
       (res) => {
         console.log("Res: ", res);
-        setToast({
-          show: true,
-          message: "Data submitted successfully!",
-          type: "success",
-        });
+        // Debug appointmentId presence
+        const appointmentId = (location.state && location.state.appointmentId != null && location.state.appointmentId !== "")
+          ? location.state.appointmentId
+          : sessionStorage.getItem("APPOINTMENT_ID") || Cookies.get("APPOINTMENT_ID");
+        // After prescription is created, update appointment status
+        if (appointmentId) {
+          updateAppointment(
+            {
+              _id: appointmentId,
+              status: "Completed"
+            },
+            (updateRes) => {
+              console.log("Appointment status updated successfully:", updateRes);
+              setToast({
+                show: true,
+                message: "Data submitted and appointment completed!",
+                type: "success",
+              });
+              setTimeout(() => {
+                navigate("/dashboard");
+              }, 1000);
+            },
+            (err) => {
+              console.error("Failed to update appointment status:", err);
+              setToast({
+                show: true,
+                message: "Failed to update appointment status.",
+                type: "error",
+              });
+              setTimeout(() => {
+                navigate("/dashboard");
+              }, 1000);
+            },
+            () => {}
+          );
+        } else {
+          setToast({
+            show: true,
+            message: "Data submitted successfully!",
+            type: "success",
+          });
+        }
       },
       (err) => {
         setToast({
@@ -228,13 +266,16 @@ const MedicalRecordsScreen = () => {
   const addPrescription = () => {
     if (
       newPrescription.medication.trim() &&
-      newPrescription.dosage.trim() &&
       newPrescription.frequency.trim() &&
       newPrescription.duration.trim()
     ) {
+      const prescriptionToAdd = {
+        ...newPrescription,
+        dosage: newPrescription.dosage.trim() ? newPrescription.dosage : 'none',
+      };
       updateProp("prescriptions", [
         ...(state.prescriptions || []),
-        newPrescription,
+        prescriptionToAdd,
       ]);
       setNewPrescription({
         medication: "",
@@ -1378,10 +1419,11 @@ const MedicalRecordsScreen = () => {
                         {prescription.duration} weeks
                       </div>
                       <button
-                        className="bg-red-500 text-white font-black w-6 h-6 flex items-center justify-center rounded-full text-xs shadow hover:bg-red-700 transition"
+                        className="bg-red-500 text-red font-black w-6 h-6 flex items-center justify-center rounded-full text-xs shadow hover:bg-red-700 transition"
                         onClick={() => removePrescription(index)}
+                        title="Remove"
                       >
-                        -
+                        <FaRegTrashAlt className="w-3.5 h-3.5 text-red" />
                       </button>
                     </li>
                   ))}

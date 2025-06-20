@@ -47,3 +47,17 @@ export const getMedicalRecord = (payload, onSuccess, onError, onFinally) => {
       onFinally();
     });
 };
+
+export const updateAppointment = (payload, onSuccess, onError, onFinally) => {
+  $axios
+    .patch(`/bookings/`, payload)
+    .then((response) => {
+      onSuccess(response);
+    })
+    .catch((error) => {
+      onError(error);
+    })
+    .finally(() => {
+      onFinally();
+    });
+};

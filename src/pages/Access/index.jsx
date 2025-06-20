@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import Logic from "./logic";
 import AppInput from "../../components/AppInput1";
 import AppButton from "../../components/AppButton";
@@ -13,6 +13,7 @@ const AccessScreen = () => {
   const [error, setError] = useState("");
   const [doctorEmail, setDoctorEmail] = useState("");
   const navigate = useNavigate();
+  const location = useLocation();
   const { state, updateProp } = Logic();
 
   // Get doctor email from local storage
@@ -28,6 +29,15 @@ const AccessScreen = () => {
         // Show error toast or message if needed
       }
     }
+    // Store appointmentId and patientEmail in sessionStorage and cookies if present and not null/undefined
+    if (location.state && location.state.appointmentId != null) {
+      sessionStorage.setItem("APPOINTMENT_ID", location.state.appointmentId);
+      Cookies.set("APPOINTMENT_ID", location.state.appointmentId);
+    }
+    if (location.state && location.state.patientEmail != null) {
+      sessionStorage.setItem("PATIENT_EMAIL", location.state.patientEmail);
+      Cookies.set("PATIENT_EMAIL", location.state.patientEmail);
+    }
   }, []);
 
   const handleSubmit = (e) => {
@@ -40,7 +50,15 @@ const AccessScreen = () => {
       (res) => {
         console.log("Res: ", res);
         if (res.valid) {
-          navigate("/medicalRecords", { state: { data: res.information } }); // Navigate with data
+          const appointmentId = location.state?.appointmentId || sessionStorage.getItem("APPOINTMENT_ID") || Cookies.get("APPOINTMENT_ID");
+          const patientEmail = location.state?.patientEmail || sessionStorage.getItem("PATIENT_EMAIL") || Cookies.get("PATIENT_EMAIL");
+          navigate("/medicalRecords", {
+            state: {
+              data: res.information,
+              appointmentId,
+              patientEmail,
+            },
+          });
         }
       },
       (err) => {
