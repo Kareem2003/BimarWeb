@@ -7,10 +7,13 @@ import {
   faCog,
   faDoorClosed,
   faChevronDown,
+  faRankingStar,
+  faStar,
 } from "@fortawesome/free-solid-svg-icons";
 import { DOCTOR_INFO } from "../helpers/constants/StaticKeys";
 import ACTION_TYPES from "../reducers/actionTypes";
 import Logo from "../assets/Asset 10.png";
+import { FaStar } from "react-icons/fa";
 
 const Layout = ({ children, hideNavigation = false }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -77,6 +80,13 @@ const Layout = ({ children, hideNavigation = false }) => {
                     <FontAwesomeIcon icon={faCog} className="mr-2" />
                     Settings
                   </Link> */}
+                  <Link
+                    to="/rate-app"
+                    className="flex items-center hover:text-tertiary transition duration-300"
+                  >
+                    <FontAwesomeIcon icon={faStar} className="mr-2" />
+                    Rate App
+                  </Link>
                 </nav>
               )}
 

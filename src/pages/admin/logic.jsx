@@ -99,3 +99,25 @@ export const useFetchDoctorRequests = () => {
 
   return { requests, loading, error, refetch: fetchRequests };
 };
+
+export const useFetchRatingsOverview = () => {
+  const [ratingsOverview, setRatingsOverview] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    AdminServices.fetchRatingsOverview(
+      (data) => {
+        setRatingsOverview(data);
+        setError(null);
+      },
+      (error) => {
+        setError(error);
+        setRatingsOverview(null);
+      },
+      () => setLoading(false)
+    );
+  }, []);
+
+  return { ratingsOverview, loading, error };
+};

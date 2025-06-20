@@ -17,16 +17,16 @@ export const BookingsList = () => {
           const formattedBookings = Array.isArray(data)
             ? data.map((booking) => ({
                 _id: booking._id,
-                patientName: booking.patientId?.userName,
-                doctorName: booking.doctorId?.doctorName,
+                patientName: booking.patientId?.userName || "Unknown",
+                doctorName: booking.doctorId?.doctorName || "Unknown",
                 appointmentDate: booking.appointmentDate,
                 // bookingNumber: booking.bookingNumber,
                 bookingType: booking.bookingType,
                 price: booking.Price,
                 status: booking.status,
                 // paymentStatus: booking.paymentStatus,
-                patientEmail: booking.patientId?.userEmail,
-                patientPhone: booking.patientId?.userPhone,
+                patientEmail: booking.patientId?.userEmail || "",
+                patientPhone: booking.patientId?.userPhone || "",
               }))
             : [];
           setBookings(formattedBookings);
@@ -110,12 +110,14 @@ export const BookingsList = () => {
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
                       <span className="text-primary text-lg font-bold">
-                        {booking.patientName.charAt(0)}
+                        {(booking.patientName &&
+                          booking.patientName.charAt(0)) ||
+                          "?"}
                       </span>
                     </div>
                     <div>
                       <h3 className="text-lg font-semibold text-gray-900">
-                        {booking.patientName}
+                        {booking.patientName || "Unknown"}
                       </h3>
                     </div>
                   </div>

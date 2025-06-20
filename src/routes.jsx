@@ -11,12 +11,13 @@ import { DOCTOR_INFO } from "./helpers/constants/StaticKeys";
 import DashboardScreen from "./pages/Dashboard";
 import AccessScreen from "./pages/Access";
 import MedicalRecordsScreen from "./pages/MedicalRecords";
-import ResetPasswordScreen from './pages/ResetPassword';
-import AdminDashboard from './pages/admin';
-import BookingsList from './pages/admin/components/BookingsList';
-import DoctorRequests from './pages/admin/components/DoctorRequests';
-import DoctorsList from './pages/admin/components/DoctorsList';
-import PatientsList from './pages/admin/components/PatientsList';
+import ResetPasswordScreen from "./pages/ResetPassword";
+import AdminDashboard from "./pages/admin";
+import BookingsList from "./pages/admin/components/BookingsList";
+import DoctorRequests from "./pages/admin/components/DoctorRequests";
+import DoctorsList from "./pages/admin/components/DoctorsList";
+import PatientsList from "./pages/admin/components/PatientsList";
+import RateApp from "./pages/RattingApp";
 
 const Routers = () => {
   return useRoutes([
@@ -75,11 +76,21 @@ const Routers = () => {
         </ProtectedRoute>
       ),
     },
-    { 
-      path: "/admin", 
+    {
+      path: "/rate-app",
+      element: (
+        <ProtectedRoute requireAdmin={false}>
+          <Layout>
+            <RateApp />
+          </Layout>
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: "/admin",
       element: (
         <ProtectedRoute requireAdmin={true}>
-            <AdminDashboard />
+          <AdminDashboard />
         </ProtectedRoute>
       ),
       children: [
@@ -87,7 +98,7 @@ const Routers = () => {
         { path: "doctors", element: <DoctorsList /> },
         { path: "patients", element: <PatientsList /> },
         { path: "requests", element: <DoctorRequests /> },
-      ]
+      ],
     },
   ]);
 };
