@@ -92,7 +92,14 @@ const MedicalRecordsScreen = () => {
           message: "Access granted successfully!",
           type: "success",
         });
-      } catch (err) {}
+      } catch (err) {
+        console.error("Error processing medical data:", err);
+        setToast({
+          show: true,
+          message: "Error processing medical data. Please try again.",
+          type: "error",
+        });
+      }
     }
     if (patientEmail) {
       updateProp("patientEmail", patientEmail);
@@ -745,13 +752,15 @@ const MedicalRecordsScreen = () => {
                             {state.medicalRecords.personalRecords
                               .birthDateOfFirstChild || "N/A"}
                           </div>
-                          <div>
-                            <span className="font-semibold">
-                              Number of Wives:
-                            </span>{" "}
-                            {state.medicalRecords.personalRecords.wifesNumber ||
-                              "N/A"}
-                          </div>
+                          {state.medicalRecords.personalRecords.Gender !== "Female" && (
+                            <div>
+                              <span className="font-semibold">
+                                Number of Wives:
+                              </span>{" "}
+                              {state.medicalRecords.personalRecords.wifesNumber ||
+                                "N/A"}
+                            </div>
+                          )}
                         </div>
                       </div>
                       {/* Lifestyle Information */}
