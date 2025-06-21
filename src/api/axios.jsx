@@ -27,13 +27,15 @@ export const $axiosFormData = axios.create({
     "Content-Type": "multipart/form-data",
     Accept: "application/json",
   },
-  timeout: 10000, // 10 seconds timeout
+  timeout: 10000, // 10 seconds timeout,
+  withCredentials: true, // Include credentials (cookies) in requests
 });
 
 export const $securedAxios = axios.create({
   baseURL: BASE_URL,
   headers: getCommonHeaders(),
   timeout: 10000, // 10 seconds timeout
+  withCredentials: true, // Include credentials (cookies) in requests
 });
 
 const requestHandler = async (request) => {
@@ -76,6 +78,9 @@ $axios.interceptors.response.use(responseHandler, errHandler);
 
 // UNSECURED RESPONSE HANDLER
 $axiosFormData.interceptors.response.use(responseHandler, errHandler);
+
+// Add request interceptor to FormData for authentication
+$axiosFormData.interceptors.request.use(requestHandler, errHandler);
 
 // SECURED REQUEST HANDLER
 $securedAxios.interceptors.request.use(requestHandler, errHandler);
