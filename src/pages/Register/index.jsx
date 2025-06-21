@@ -562,7 +562,7 @@ const specialties = [
                           />
 
                           <label className="block text-white">
-                            Consultation Price{" "}
+                            booking Price{" "}
                             <span className="text-red-500">*</span>
                           </label>
                           <AppInput
@@ -864,7 +864,7 @@ const specialties = [
                             updateClinicField(
                               index,
                               "clinicLicense",
-                              e.target.files[index]
+                              e.target.files[0]
                             );
                           }}
                           accept="image/*"

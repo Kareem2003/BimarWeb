@@ -551,9 +551,9 @@ const DashboardScreen = () => {
           const clinicName = clinic?.clinicName || "Unknown Clinic";
 
           return (
-            <div className="flex justify-center">
+          <div className="flex justify-center">
               <span className="text-gray-600 font-medium">{clinicName}</span>
-            </div>
+          </div>
           );
         },
       },
