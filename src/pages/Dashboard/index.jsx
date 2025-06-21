@@ -70,7 +70,7 @@ const DashboardScreen = () => {
   const [clinicFilter, setClinicFilter] = useState("all");
   const [sortConfig, setSortConfig] = useState({
     key: "appointmentDate",
-    direction: "asc"
+    direction: "asc",
   });
   const [displayCount, setDisplayCount] = useState(5);
   const navigate = useNavigate();
@@ -115,7 +115,7 @@ const DashboardScreen = () => {
           {
             id: "todayPatients",
             title: "Today's Patients",
-            value: state.totalPatientsToday?.toString() || "0",
+            value: state.totalPatients?.toString(),
             icon: <FaCalendarAlt className="text-blue-500 text-2xl" />,
           },
           {
@@ -324,26 +324,29 @@ const DashboardScreen = () => {
   }, [mainSections]);
 
   useEffect(() => {
-    // Update the income value in mainSections when todayIncome changes
-    if (mainSections.length > 0) {
-      const updatedSections = [...mainSections];
+    setMainSections((prevSections) => {
+      const updatedSections = [...prevSections];
       const statsSection = updatedSections.find(
         (section) => section.id === "stats"
       );
-
       if (statsSection && statsSection.subsections) {
         const incomeSubsection = statsSection.subsections.find(
           (sub) => sub.id === "income"
         );
-
         if (incomeSubsection) {
-          // Format the income value with $ sign
           incomeSubsection.value = `$${state.todayIncome || 0}`;
-          setMainSections(updatedSections);
+        }
+        const todayPatientsSubsection = statsSection.subsections.find(
+          (sub) => sub.id === "todayPatients"
+        );
+        if (todayPatientsSubsection) {
+          todayPatientsSubsection.value =
+            state.totalPatients?.toString() || "0";
         }
       }
-    }
-  }, [state.todayIncome, state.totalPatientsToday]);
+      return updatedSections;
+    });
+  }, [state.todayIncome, state.totalPatients]);
 
   useEffect(() => {
     // Update the total patients value in mainSections when totalPatientsThisMonth changes
@@ -423,7 +426,7 @@ const DashboardScreen = () => {
       },
       {
         Header: () => (
-          <div 
+          <div
             className="cursor-pointer hover:text-gray-700 flex items-center justify-center gap-1"
             onClick={() => handleSort("appointmentDate")}
           >
@@ -454,7 +457,7 @@ const DashboardScreen = () => {
       },
       {
         Header: () => (
-          <div 
+          <div
             className="cursor-pointer hover:text-gray-700 flex items-center justify-center gap-1"
             onClick={() => handleSort("bookingNumber")}
           >
@@ -544,13 +547,13 @@ const DashboardScreen = () => {
         accessor: "clinicId",
         Cell: ({ value }) => {
           // Find the clinic name from doctor's clinic data
-          const clinic = doctor?.clinic?.find(clinic => clinic._id === value);
+          const clinic = doctor?.clinic?.find((clinic) => clinic._id === value);
           const clinicName = clinic?.clinicName || "Unknown Clinic";
-          
+
           return (
-            <div className="flex justify-center">
+          <div className="flex justify-center">
               <span className="text-gray-600 font-medium">{clinicName}</span>
-            </div>
+          </div>
           );
         },
       },
@@ -629,15 +632,14 @@ const DashboardScreen = () => {
             .includes(searchQuery.toLowerCase()) &&
           (statusFilter === "all" ||
             patient.status.toLowerCase() === statusFilter.toLowerCase()) &&
-          (clinicFilter === "all" ||
-            patient.clinicId === clinicFilter)
+          (clinicFilter === "all" || patient.clinicId === clinicFilter)
         );
       }) || [];
 
     // Sort based on sortConfig
     return filtered.sort((a, b) => {
       let aValue, bValue;
-      
+
       if (sortConfig.key === "appointmentDate") {
         aValue = new Date(a.appointmentDate);
         bValue = new Date(b.appointmentDate);
@@ -729,9 +731,12 @@ const DashboardScreen = () => {
   };
 
   const handleSort = (key) => {
-    setSortConfig(prevConfig => ({
+    setSortConfig((prevConfig) => ({
       key,
-      direction: prevConfig.key === key && prevConfig.direction === "asc" ? "desc" : "asc"
+      direction:
+        prevConfig.key === key && prevConfig.direction === "asc"
+          ? "desc"
+          : "asc",
     }));
   };
 
@@ -821,7 +826,7 @@ const DashboardScreen = () => {
                                     >
                                       <div className="text-sm sm:text-base">
                                         {subsection.type === "chart" ? (
-                                          <div className="w-[350px] pr-3">
+                                          <div className="w-[500px]">
                                             <div
                                               {...provided.dragHandleProps}
                                               className="flex justify-between mb-2"
@@ -833,12 +838,12 @@ const DashboardScreen = () => {
                                             </div>
 
                                             <LineChart
-                                              width={450}
+                                              width={500}
                                               height={289}
                                               data={subsection.data}
                                               margin={{
                                                 top: 0,
-                                                right: 0,
+                                                right: 20,
                                                 left: 0,
                                                 bottom: 20,
                                               }}
@@ -1130,12 +1135,16 @@ const DashboardScreen = () => {
                                 >
                                   {rows.map((row, rowIndex) => {
                                     prepareRow(row);
-                                    const isCompletedOrCancelled = row.original.status === "Completed" || row.original.status === "Cancelled";
+                                    const isCompletedOrCancelled =
+                                      row.original.status === "Completed" ||
+                                      row.original.status === "Cancelled";
                                     return (
                                       <tr
                                         {...row.getRowProps()}
                                         className={`transition-colors ${
-                                          !isCompletedOrCancelled ? "hover:bg-gray-50" : ""
+                                          !isCompletedOrCancelled
+                                            ? "hover:bg-gray-50"
+                                            : ""
                                         }`}
                                         key={rowIndex}
                                       >
@@ -1147,11 +1156,13 @@ const DashboardScreen = () => {
                                             <td
                                               {...cell.getCellProps()}
                                               className={`px-6 py-4 whitespace-nowrap ${
-                                                !isActionsColumn && !isCompletedOrCancelled
+                                                !isActionsColumn &&
+                                                !isCompletedOrCancelled
                                                   ? "cursor-pointer"
                                                   : ""
                                               } ${
-                                                isCompletedOrCancelled && !isActionsColumn
+                                                isCompletedOrCancelled &&
+                                                !isActionsColumn
                                                   ? "opacity-60"
                                                   : ""
                                               }`}
@@ -1160,7 +1171,10 @@ const DashboardScreen = () => {
                                                 e.stopPropagation();
 
                                                 // Only navigate if this is NOT the actions column AND status is not Completed/Cancelled
-                                                if (!isActionsColumn && !isCompletedOrCancelled) {
+                                                if (
+                                                  !isActionsColumn &&
+                                                  !isCompletedOrCancelled
+                                                ) {
                                                   handleRowClick(row.original);
                                                 }
                                               }}

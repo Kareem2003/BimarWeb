@@ -63,19 +63,19 @@ const Logic = () => {
           const data = res.data || res;
           console.log("Today's income response:", data);
           updateProp("todayIncome", data.totalMoney);
-          updateProp("totalPatientsToday", data.totalPatientsToday);
+          updateProp("totalPatients", data.totalPatients);
         },
         (err) => {
           console.error("Error fetching today's income:", err);
           updateProp("todayIncome", 0);
-          updateProp("totalPatientsToday", 0);
+          updateProp("totalPatients", 0);
         },
         () => {}
       );
     } catch (error) {
       console.error("Exception in updateTodayIncome:", error);
       updateProp("todayIncome", 0);
-      updateProp("totalPatientsToday", 0);
+      updateProp("totalPatients", 0);
     }
   };
 

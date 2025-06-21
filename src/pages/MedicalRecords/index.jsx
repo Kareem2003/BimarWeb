@@ -76,12 +76,20 @@ const MedicalRecordsScreen = () => {
   // Handle data loading after successful verification
   useEffect(() => {
     // Always prefer sessionStorage/cookies if location.state.appointmentId is null/undefined/empty
-    const appointmentId = (location.state && location.state.appointmentId != null && location.state.appointmentId !== "")
-      ? location.state.appointmentId
-      : sessionStorage.getItem("APPOINTMENT_ID") || Cookies.get("APPOINTMENT_ID");
-    const patientEmail = (location.state && location.state.patientEmail != null && location.state.patientEmail !== "")
-      ? location.state.patientEmail
-      : sessionStorage.getItem("PATIENT_EMAIL") || Cookies.get("PATIENT_EMAIL");
+    const appointmentId =
+      location.state &&
+      location.state.appointmentId != null &&
+      location.state.appointmentId !== ""
+        ? location.state.appointmentId
+        : sessionStorage.getItem("APPOINTMENT_ID") ||
+          Cookies.get("APPOINTMENT_ID");
+    const patientEmail =
+      location.state &&
+      location.state.patientEmail != null &&
+      location.state.patientEmail !== ""
+        ? location.state.patientEmail
+        : sessionStorage.getItem("PATIENT_EMAIL") ||
+          Cookies.get("PATIENT_EMAIL");
     if (location.state && location.state.data) {
       try {
         const medicalData = location.state.data;
@@ -92,7 +100,14 @@ const MedicalRecordsScreen = () => {
           message: "Access granted successfully!",
           type: "success",
         });
-      } catch (err) {}
+      } catch (err) {
+        console.error("Error processing medical data:", err);
+        setToast({
+          show: true,
+          message: "Error processing medical data. Please try again.",
+          type: "error",
+        });
+      }
     }
     if (patientEmail) {
       updateProp("patientEmail", patientEmail);
@@ -201,18 +216,25 @@ const MedicalRecordsScreen = () => {
       (res) => {
         console.log("Res: ", res);
         // Debug appointmentId presence
-        const appointmentId = (location.state && location.state.appointmentId != null && location.state.appointmentId !== "")
-          ? location.state.appointmentId
-          : sessionStorage.getItem("APPOINTMENT_ID") || Cookies.get("APPOINTMENT_ID");
+        const appointmentId =
+          location.state &&
+          location.state.appointmentId != null &&
+          location.state.appointmentId !== ""
+            ? location.state.appointmentId
+            : sessionStorage.getItem("APPOINTMENT_ID") ||
+              Cookies.get("APPOINTMENT_ID");
         // After prescription is created, update appointment status
         if (appointmentId) {
           updateAppointment(
             {
               _id: appointmentId,
-              status: "Completed"
+              status: "Completed",
             },
             (updateRes) => {
-              console.log("Appointment status updated successfully:", updateRes);
+              console.log(
+                "Appointment status updated successfully:",
+                updateRes
+              );
               setToast({
                 show: true,
                 message: "Data submitted and appointment completed!",
@@ -271,7 +293,7 @@ const MedicalRecordsScreen = () => {
     ) {
       const prescriptionToAdd = {
         ...newPrescription,
-        dosage: newPrescription.dosage.trim() ? newPrescription.dosage : 'none',
+        dosage: newPrescription.dosage.trim() ? newPrescription.dosage : "none",
       };
       updateProp("prescriptions", [
         ...(state.prescriptions || []),
@@ -456,6 +478,33 @@ const MedicalRecordsScreen = () => {
       () => {}
     );
   };
+
+  // Prevent page refresh and navigation away
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      e.preventDefault();
+      e.returnValue =
+        "Are you sure you want to leave this page? Changes you made may not be saved.";
+      return e.returnValue;
+    };
+    const handleKeyDown = (e) => {
+      // Block F5, Ctrl+R, Cmd+R
+      if (
+        e.key === "F5" ||
+        ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "r")
+      ) {
+        e.preventDefault();
+        e.stopPropagation();
+        window.alert("Page refresh is disabled on this screen.");
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
 
   return (
     <>
@@ -745,13 +794,15 @@ const MedicalRecordsScreen = () => {
                             {state.medicalRecords.personalRecords
                               .birthDateOfFirstChild || "N/A"}
                           </div>
-                          <div>
-                            <span className="font-semibold">
-                              Number of Wives:
-                            </span>{" "}
-                            {state.medicalRecords.personalRecords.wifesNumber ||
-                              "N/A"}
-                          </div>
+                          {state.medicalRecords.personalRecords.Gender !== "Female" && (
+                            <div>
+                              <span className="font-semibold">
+                                Number of Wives:
+                              </span>{" "}
+                              {state.medicalRecords.personalRecords.wifesNumber ||
+                                "N/A"}
+                            </div>
+                          )}
                         </div>
                       </div>
                       {/* Lifestyle Information */}

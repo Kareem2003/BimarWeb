@@ -181,12 +181,14 @@ export const DoctorRequests = () => {
                         <div>
                           <h4 className="text-sm font-medium text-gray-900 mb-2">Clinic Information</h4>
                           {request.clinic?.map((clinic, index) => (
-                            <div key={index} className="mb-4">
-                              <p className="text-sm font-medium text-gray-700">Clinic {index + 1}</p>
-                              <DetailItem icon={FaHospital} label="Name" value={clinic.clinicName} />
-                              <DetailItem icon={FaMapMarkerAlt} label="Location" value={`${clinic.clinicArea}, ${clinic.clinicCity}`} />
-                              <DetailItem icon={FaPhone} label="Contact" value={clinic.clinicPhone?.[0]?.replace(/[\[\]"]/g, '')} />
-                              <DocumentLink icon={FaFileAlt} label="Clinic License" href={clinic.clinicLicense} />
+                            <div key={index} className="mt-4 p-3 bg-white rounded border border-gray-200">
+                              <p className="text-sm font-medium text-gray-700 mb-2">{clinic.clinicName || `Clinic ${index + 1}`}</p>
+                              <div className="space-y-1">
+                                <p className="text-sm text-gray-600">{clinic.clinicCity}, {clinic.clinicArea}</p>
+                                <p className="text-sm text-gray-600">{clinic.clinicAddress}</p>
+                                <p className="text-sm text-gray-600">Phone: {clinic.clinicPhone?.[0]?.toString().replace(/[[\]"]/g, '')}</p>
+                                <DocumentLink icon={FaFileAlt} label={`${clinic.clinicName || `Clinic ${index + 1}`} License`} href={clinic.clinicLicense} />
+                              </div>
                             </div>
                           ))}
                         </div>
