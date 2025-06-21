@@ -39,31 +39,24 @@ const useRatingLogic = (navigate) => {
   }, []);
 
   useEffect(() => {
-    const fetchExistingRating = () => {
-      getUserRating(
-        (response) => {
-          if (
-            response.data &&
-            response.data.data &&
-            response.data.data.rating !== undefined
-          ) {
-            const ratingData = response.data.data;
-            setRating(ratingData.rating);
-            setFeedback(ratingData.comment || "");
-            setHasExistingRating(true);
-          } else {
-            setHasExistingRating(false);
-          }
-          setIsLoading(false);
-        },
-        (error) => {
-          setIsLoading(false);
+    getUserRating(
+      (response) => {
+        console.log("Response Rating : ", response);
+        if (response.data && response.data.rating !== undefined) {
+          const ratingData = response.data;
+          setRating(ratingData.rating);
+          setFeedback(ratingData.comment || "");
+          setHasExistingRating(true);
+        } else {
           setHasExistingRating(false);
-        },
-        () => {}
-      );
-    };
-    fetchExistingRating();
+        }
+        setIsLoading(false);
+      },
+      (error) => {
+        setIsLoading(false);
+        setHasExistingRating(false);
+      }
+    );
   }, []);
 
   const getRatingEmoji = (rating) => {
