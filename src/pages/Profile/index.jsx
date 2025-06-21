@@ -305,16 +305,27 @@ const ProfileScreenComponent = () => {
               <h2 className="text-2xl font-bold text-tertiary">
                 Personal Information
               </h2>
-              <button
-                onClick={handleEditToggle}
-                className={`px-6 py-2 rounded-lg transition-colors ${
-                  isEditing
-                    ? "bg-tertiary text-primary"
-                    : "bg-primary text-white hover:bg-primary/80"
-                }`}
-              >
-                {isEditing ? "Save" : "Edit"}
-              </button>
+              <div className="flex gap-2">
+                {isEditing && (
+                  <button
+                    onClick={() => setIsEditing(false)}
+                    className="px-6 py-2 bg-red-500 rounded-lg hover:bg-red-600 transition-colors font-medium border-2 border-red-600 shadow-md"
+                    style={{ minWidth: '80px', display: 'inline-block' }}
+                  >
+                    Cancel
+                  </button>
+                )}
+                <button
+                  onClick={handleEditToggle}
+                  className={`px-6 py-2 rounded-lg transition-colors font-medium ${
+                    isEditing
+                      ? "bg-tertiary text-primary"
+                      : "bg-primary text-white hover:bg-primary/80"
+                  }`}
+                >
+                  {isEditing ? "Save" : "Edit"}
+                </button>
+              </div>
             </div>
             <hr className="mb-5"></hr>
             <div className="space-y-6">
@@ -618,7 +629,7 @@ const ProfileScreenComponent = () => {
                   <div key={index} className="space-y-4 border-t pt-4">
                     <div className="flex justify-between items-center">
                       <h3 className="text-xl font-semibold text-tertiary">
-                        Clinic {index + 1}
+                        {clinic.clinicName || `Clinic ${index + 1}`}
                       </h3>
                       <button
                         onClick={() => showDeleteConfirmation(clinic._id, clinic.clinicName || `Clinic ${index + 1}`)}
@@ -763,7 +774,7 @@ const ProfileScreenComponent = () => {
                           />
                         ) : (
                           <p className="text-lg font-semibold text-white">
-                            {clinic.clinicPhone?.[0] || "N/A"}
+                            {typeof clinic.clinicPhone?.[0] === 'string' ? clinic.clinicPhone[0].replace(/[[\]"]/g, '') : clinic.clinicPhone?.[0] || "N/A"}
                           </p>
                         )}
                       </div>
