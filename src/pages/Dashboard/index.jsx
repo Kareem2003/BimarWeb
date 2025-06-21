@@ -15,6 +15,9 @@ import {
   FaPlus,
   FaCheckCircle,
   FaRegCircle,
+  FaSort,
+  FaSortUp,
+  FaSortDown,
 } from "react-icons/fa";
 import {
   LineChart,
@@ -64,6 +67,11 @@ const DashboardScreen = () => {
   } = Logic();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [clinicFilter, setClinicFilter] = useState("all");
+  const [sortConfig, setSortConfig] = useState({
+    key: "appointmentDate",
+    direction: "asc"
+  });
   const [displayCount, setDisplayCount] = useState(5);
   const navigate = useNavigate();
   const [mainSections, setMainSections] = useState(() => {
@@ -414,7 +422,23 @@ const DashboardScreen = () => {
         Cell: ({ value }) => <span className="text-gray-600">{value}</span>,
       },
       {
-        Header: "Date",
+        Header: () => (
+          <div 
+            className="cursor-pointer hover:text-gray-700 flex items-center justify-center gap-1"
+            onClick={() => handleSort("appointmentDate")}
+          >
+            Date
+            {sortConfig.key === "appointmentDate" ? (
+              sortConfig.direction === "asc" ? (
+                <FaSortUp className="w-3 h-3" />
+              ) : (
+                <FaSortDown className="w-3 h-3" />
+              )
+            ) : (
+              <FaSort className="w-3 h-3 text-gray-400" />
+            )}
+          </div>
+        ),
         accessor: "appointmentDate",
         Cell: ({ value }) => (
           <span className="text-gray-600">
@@ -429,7 +453,23 @@ const DashboardScreen = () => {
         ),
       },
       {
-        Header: "Booking Number",
+        Header: () => (
+          <div 
+            className="cursor-pointer hover:text-gray-700 flex items-center justify-center gap-1"
+            onClick={() => handleSort("bookingNumber")}
+          >
+            Booking Number
+            {sortConfig.key === "bookingNumber" ? (
+              sortConfig.direction === "asc" ? (
+                <FaSortUp className="w-3 h-3" />
+              ) : (
+                <FaSortDown className="w-3 h-3" />
+              )
+            ) : (
+              <FaSort className="w-3 h-3 text-gray-400" />
+            )}
+          </div>
+        ),
         accessor: "bookingNumber",
         Cell: ({ value }) => (
           <div className="flex justify-center">
@@ -500,21 +540,19 @@ const DashboardScreen = () => {
         },
       },
       {
-        Header: "Payment Status",
-        accessor: "paymentStatus",
-        Cell: ({ value }) => (
-          <div className="flex justify-center">
-            <span
-              className={`px-2.5 py-1 rounded-full text-xs font-medium ${
-                value === "Paid"
-                  ? "bg-green-100 text-green-800"
-                  : "bg-yellow-100 text-yellow-800"
-              }`}
-            >
-              {value}
-            </span>
-          </div>
-        ),
+        Header: "Clinic Name",
+        accessor: "clinicId",
+        Cell: ({ value }) => {
+          // Find the clinic name from doctor's clinic data
+          const clinic = doctor?.clinic?.find(clinic => clinic._id === value);
+          const clinicName = clinic?.clinicName || "Unknown Clinic";
+          
+          return (
+            <div className="flex justify-center">
+              <span className="text-gray-600 font-medium">{clinicName}</span>
+            </div>
+          );
+        },
       },
       {
         Header: "Actions",
@@ -577,7 +615,7 @@ const DashboardScreen = () => {
         },
       },
     ],
-    []
+    [sortConfig]
   );
 
   const filteredPatients = useMemo(() => {
@@ -590,15 +628,33 @@ const DashboardScreen = () => {
             .toLowerCase()
             .includes(searchQuery.toLowerCase()) &&
           (statusFilter === "all" ||
-            patient.status.toLowerCase() === statusFilter.toLowerCase())
+            patient.status.toLowerCase() === statusFilter.toLowerCase()) &&
+          (clinicFilter === "all" ||
+            patient.clinicId === clinicFilter)
         );
       }) || [];
 
-    // Sort by appointment date (oldest first)
+    // Sort based on sortConfig
     return filtered.sort((a, b) => {
-      return new Date(a.appointmentDate) - new Date(b.appointmentDate);
+      let aValue, bValue;
+      
+      if (sortConfig.key === "appointmentDate") {
+        aValue = new Date(a.appointmentDate);
+        bValue = new Date(b.appointmentDate);
+      } else if (sortConfig.key === "bookingNumber") {
+        aValue = a.bookingNumber;
+        bValue = b.bookingNumber;
+      } else {
+        return 0;
+      }
+
+      if (sortConfig.direction === "asc") {
+        return aValue > bValue ? 1 : -1;
+      } else {
+        return aValue < bValue ? 1 : -1;
+      }
     });
-  }, [state.appointments, searchQuery, statusFilter]);
+  }, [state.appointments, searchQuery, statusFilter, clinicFilter, sortConfig]);
 
   const paginatedPatients = useMemo(() => {
     return filteredPatients.slice(0, displayCount);
@@ -670,6 +726,13 @@ const DashboardScreen = () => {
         },
       });
     }
+  };
+
+  const handleSort = (key) => {
+    setSortConfig(prevConfig => ({
+      key,
+      direction: prevConfig.key === key && prevConfig.direction === "asc" ? "desc" : "asc"
+    }));
   };
 
   return (
@@ -1018,6 +1081,18 @@ const DashboardScreen = () => {
                               <option value="Pending">Pending</option>
                               <option value="cancelled">Cancelled</option>
                             </select>
+                            <select
+                              value={clinicFilter}
+                              onChange={(e) => setClinicFilter(e.target.value)}
+                              className="px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            >
+                              <option value="all">All Clinics</option>
+                              {doctor?.clinic?.map((clinic) => (
+                                <option key={clinic._id} value={clinic._id}>
+                                  {clinic.clinicName}
+                                </option>
+                              ))}
+                            </select>
                           </div>
 
                           <div className="border border-gray-200 rounded-lg overflow-hidden shadow-sm">
@@ -1055,10 +1130,13 @@ const DashboardScreen = () => {
                                 >
                                   {rows.map((row, rowIndex) => {
                                     prepareRow(row);
+                                    const isCompletedOrCancelled = row.original.status === "Completed" || row.original.status === "Cancelled";
                                     return (
                                       <tr
                                         {...row.getRowProps()}
-                                        className="hover:bg-gray-50 transition-colors"
+                                        className={`transition-colors ${
+                                          !isCompletedOrCancelled ? "hover:bg-gray-50" : ""
+                                        }`}
                                         key={rowIndex}
                                       >
                                         {row.cells.map((cell, cellIndex) => {
@@ -1069,16 +1147,20 @@ const DashboardScreen = () => {
                                             <td
                                               {...cell.getCellProps()}
                                               className={`px-6 py-4 whitespace-nowrap ${
-                                                !isActionsColumn
+                                                !isActionsColumn && !isCompletedOrCancelled
                                                   ? "cursor-pointer"
+                                                  : ""
+                                              } ${
+                                                isCompletedOrCancelled && !isActionsColumn
+                                                  ? "opacity-60"
                                                   : ""
                                               }`}
                                               key={cellIndex}
                                               onClick={(e) => {
                                                 e.stopPropagation();
 
-                                                // Only navigate if this is NOT the actions column
-                                                if (!isActionsColumn) {
+                                                // Only navigate if this is NOT the actions column AND status is not Completed/Cancelled
+                                                if (!isActionsColumn && !isCompletedOrCancelled) {
                                                   handleRowClick(row.original);
                                                 }
                                               }}
