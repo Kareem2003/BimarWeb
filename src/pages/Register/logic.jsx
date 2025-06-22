@@ -180,7 +180,7 @@ const Logic = () => {
       formData,
       (res) => {
         console.log("Registration successful:", res);
-        ToastManager.notify("Registration successful!", {
+        ToastManager.notify("Request successfully sent. Please wait for approval.", {
           type: "success",
           duration: 5000,
         });
