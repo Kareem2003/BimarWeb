@@ -163,12 +163,17 @@ export const getDoctorDetailsForEdit = (
 
 export const resubmitDoctorApplication = (
   doctorId,
-  payload,
+  payload, // should be FormData
   onSuccess,
   onError
 ) => {
   $publicAxios
-    .put(`/doctor/resubmit-application/${doctorId}`, payload)
+    .put(`/doctor/resubmit-application/${doctorId}`, payload, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+      withCredentials: true, 
+    })
     .then((response) => {
       console.log("Doctor application resubmitted:", response);
       onSuccess(response);
@@ -176,7 +181,7 @@ export const resubmitDoctorApplication = (
     .catch((error) => {
       console.error("Error resubmitting doctor application:", error);
       const errorMessage =
-        error?.data?.[0] ||
+        error?.response?.data?.data?.[0] ||
         error?.message ||
         "Failed to resubmit doctor application";
       onError(errorMessage);
