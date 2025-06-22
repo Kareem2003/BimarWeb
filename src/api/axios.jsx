@@ -38,6 +38,17 @@ export const $securedAxios = axios.create({
   withCredentials: true, // Include credentials (cookies) in requests
 });
 
+export const $publicAxios = axios.create({
+  baseURL: BASE_URL,
+  headers: {
+    common: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+  },
+  timeout: 20000,
+});
+
 const requestHandler = async (request) => {
   const authToken = await AppStorage.getItem(AUTHENTICATION_TOKEN);
   if (authToken) {
@@ -75,6 +86,9 @@ const errHandler = (error) => {
 
 // UNSECURED RESPONSE HANDLER
 $axios.interceptors.response.use(responseHandler, errHandler);
+
+// PUBLIC RESPONSE HANDLER
+$publicAxios.interceptors.response.use(responseHandler, errHandler);
 
 // UNSECURED RESPONSE HANDLER
 $axiosFormData.interceptors.response.use(responseHandler, errHandler);

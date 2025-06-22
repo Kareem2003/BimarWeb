@@ -18,6 +18,7 @@ import DoctorRequests from "./pages/admin/components/DoctorRequests";
 import DoctorsList from "./pages/admin/components/DoctorsList";
 import PatientsList from "./pages/admin/components/PatientsList";
 import RateApp from "./pages/RattingApp";
+import ReApply from "./pages/ReApply";
 
 const Routers = () => {
   return useRoutes([
@@ -99,6 +100,10 @@ const Routers = () => {
         { path: "patients", element: <PatientsList /> },
         { path: "requests", element: <DoctorRequests /> },
       ],
+    },
+    {
+      path: "/doctor-re-apply/:id",
+      element: <ReApply />,
     },
   ]);
 };

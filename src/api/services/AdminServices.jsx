@@ -1,4 +1,4 @@
-import { $axios } from "../axios";
+import { $axios, $publicAxios } from "../axios";
 
 export const fetchDoctors = (onSuccess, onError, onFinally) => {
   $axios
@@ -101,13 +101,14 @@ export const approveDoctorRequest = (
 
 export const rejectDoctorRequest = (
   doctorId,
+  rejectionReason,
   onSuccess,
   onError,
   onFinally
 ) => {
   $axios
     .put(`/admin/doctor/reject/${doctorId}`, {
-      newStatus: "rejected",
+      rejectionReason: rejectionReason,
     })
     .then((response) => {
       console.log("Doctor rejected:", response.data);
@@ -136,5 +137,48 @@ export const fetchRatingsOverview = (onSuccess, onError, onFinally) => {
     })
     .finally(() => {
       onFinally();
+    });
+};
+
+export const getDoctorDetailsForEdit = (
+  doctorId,
+  onSuccess,
+  onError
+) => {
+  $publicAxios
+    .get(`/doctor/edit-details/${doctorId}`)
+    .then((response) => {
+      console.log("Doctor details for edit:", response);
+      onSuccess(response);
+    })
+    .catch((error) => {
+      console.error("Error fetching doctor details for edit:", error);
+      const errorMessage =
+        error?.data?.[0] ||
+        error?.message ||
+        "Failed to fetch doctor details for edit";
+      onError(errorMessage);
+    });
+};
+
+export const resubmitDoctorApplication = (
+  doctorId,
+  payload,
+  onSuccess,
+  onError
+) => {
+  $publicAxios
+    .put(`/doctor/resubmit-application/${doctorId}`, payload)
+    .then((response) => {
+      console.log("Doctor application resubmitted:", response);
+      onSuccess(response);
+    })
+    .catch((error) => {
+      console.error("Error resubmitting doctor application:", error);
+      const errorMessage =
+        error?.data?.[0] ||
+        error?.message ||
+        "Failed to resubmit doctor application";
+      onError(errorMessage);
     });
 };

@@ -10,6 +10,9 @@ export const DoctorRequests = () => {
   const [actionLoading, setActionLoading] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '', type: '' });
   const [expandedRows, setExpandedRows] = useState({});
+  const [rejectionModalOpen, setRejectionModalOpen] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState('');
+  const [selectedDoctorId, setSelectedDoctorId] = useState(null);
 
   const handleApprove = async (doctorId) => {
     setActionLoading(true);
@@ -34,17 +37,23 @@ export const DoctorRequests = () => {
     );
   };
 
-  const handleReject = async (doctorId) => {
+  const handleReject = async () => {
+    if (!selectedDoctorId) return;
+
     setActionLoading(true);
     rejectDoctorRequest(
-      doctorId,
-      (response) => {
+      selectedDoctorId,
+      rejectionReason,
+      () => {
         setToast({
           show: true,
           message: 'Doctor request rejected successfully',
           type: 'success'
         });
         refetch(); // Refresh the list
+        setRejectionModalOpen(false);
+        setRejectionReason('');
+        setSelectedDoctorId(null);
       },
       (error) => {
         setToast({
@@ -55,6 +64,11 @@ export const DoctorRequests = () => {
       },
       () => setActionLoading(false)
     );
+  };
+
+  const openRejectionModal = (doctorId) => {
+    setSelectedDoctorId(doctorId);
+    setRejectionModalOpen(true);
   };
 
   const toggleRow = (doctorId) => {
@@ -142,7 +156,7 @@ export const DoctorRequests = () => {
                         {actionLoading ? 'Processing...' : 'Approve'}
                       </button>
                       <button
-                        onClick={() => handleReject(request._id)}
+                        onClick={() => openRejectionModal(request._id)}
                         disabled={actionLoading}
                         className="bg-[#8B0000] text-white px-3 py-1 rounded-md hover:bg-[#8B0000]/90 disabled:opacity-50"
                       >
@@ -216,6 +230,36 @@ export const DoctorRequests = () => {
           type={toast.type}
           onClose={() => setToast({ show: false, message: '', type: '' })}
         />
+      )}
+
+      {rejectionModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-md">
+            <h3 className="text-lg font-bold mb-4">Rejection Reason</h3>
+            <textarea
+              className="w-full p-2 border rounded-md"
+              rows="4"
+              placeholder="Provide a reason for rejection..."
+              value={rejectionReason}
+              onChange={(e) => setRejectionReason(e.target.value)}
+            ></textarea>
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                onClick={() => setRejectionModalOpen(false)}
+                className="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleReject}
+                disabled={actionLoading || !rejectionReason.trim()}
+                className="px-4 py-2 bg-[#8B0000] text-white rounded-md hover:bg-[#8B0000]/90 disabled:opacity-50"
+              >
+                {actionLoading ? 'Rejecting...' : 'Confirm Rejection'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
